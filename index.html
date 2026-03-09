@@ -3,216 +3,458 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每日成語拆解謎題</title>
+    <title>每日成語拆拆樂 - 366天挑戰</title>
+    <script src="366成語拆解謎題.js"></script>
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --box-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #7f8c8d;
+            --border-radius: 12px;
+            --tile-size: 60px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, '微軟正黑體', sans-serif;
+        }
+
         body {
-            font-family: 'Microsoft JhengHei', sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
             padding: 20px;
         }
-        .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 100%;
+
+        header {
             text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s ease-out;
         }
-        h1 {
-            color: #2c3e50;
-            font-size: 24px;
+
+        header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .date-badge {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(231, 76, 60, 0.3);
+        }
+
+        .game-container {
+            background-color: var(--box-bg);
+            width: 100%;
+            max-width: 600px;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            animation: fadeIn 1s ease-out;
+        }
+
+        .hint-box {
+            background-color: #f8f9fa;
+            border-left: 5px solid var(--secondary-color);
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .hint-label {
+            font-weight: bold;
+            color: var(--secondary-color);
             margin-bottom: 5px;
+            display: block;
         }
-        .date-display {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        /* 12宮格佈局 */
-        .parts-grid {
+
+        /* 拆解零件展示區 (骰子面) */
+        .pieces-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 40px;
+            justify-items: center;
         }
-        .part-box {
-            background-color: #ecf0f1;
-            border: 2px dashed #bdc3c7;
-            border-radius: 8px;
-            height: 60px;
+
+        .piece-tile {
+            width: var(--tile-size);
+            height: var(--tile-size);
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
+            font-size: 1.8rem;
             font-weight: bold;
-            color: #2980b9;
+            color: var(--primary-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: default;
+            user-select: none;
         }
-        .part-box.empty {
-            background-color: #fafafa;
-            border: 1px solid #eaeaea;
+
+        .piece-tile:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
         }
-        .hint-section {
-            background-color: #fff3cd;
-            border-left: 5px solid #ffc107;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: left;
-            border-radius: 4px;
-            font-size: 15px;
+
+        .piece-tile.empty {
+            background: #f9f9f9;
+            border: 2px dashed #ccc;
+            box-shadow: none;
         }
-        .input-group {
+
+        /* 輸入區 */
+        .input-section {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 15px;
+            margin-bottom: 30px;
         }
-        input[type="text"] {
-            padding: 10px;
-            font-size: 18px;
-            width: 60%;
-            border: 2px solid #bdc3c7;
-            border-radius: 6px;
+
+        .char-input {
+            width: 70px;
+            height: 70px;
+            font-size: 2.5rem;
             text-align: center;
-            letter-spacing: 2px;
+            border: 2px solid #bdc3c7;
+            border-radius: 12px;
+            background-color: #fff;
+            color: var(--primary-color);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            outline: none;
         }
+
+        .char-input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
         button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #2ecc71;
-        }
-        .message {
-            margin-top: 15px;
-            font-size: 16px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
             font-weight: bold;
-            min-height: 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-        .success { color: #27ae60; }
-        .error { color: #e74c3c; }
+
+        .btn-submit {
+            background-color: var(--secondary-color);
+            color: white;
+            box-shadow: 0 4px 6px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-submit:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-clear {
+            background-color: #ecf0f1;
+            color: var(--text-muted);
+        }
+
+        .btn-clear:hover {
+            background-color: #bdc3c7;
+            color: var(--text-main);
+        }
+
+        /* 彈出視窗 (Modal) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .modal-desc {
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background-color: var(--primary-color);
+            color: white;
+            width: 100%;
+        }
+
+        .modal-btn:hover {
+            background-color: #1a252f;
+        }
+
+        /* 動畫定義 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .shake-animation {
+            animation: shake 0.4s ease-in-out;
+            border-color: #e74c3c !important;
+        }
+
+        /* 手機版響應式設計 */
+        @media (max-width: 500px) {
+            .pieces-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            .piece-tile {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+            .char-input {
+                width: 55px;
+                height: 55px;
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>每日成語拆解謎題</h1>
-        <div id="dateDisplay" class="date-display">載入中...</div>
+    <header>
+        <h1>每日成語拆拆樂</h1>
+        <div class="date-badge" id="date-display">載入中...</div>
+    </header>
 
-        <div id="partsGrid" class="parts-grid">
+    <div class="game-container">
+        <div class="hint-box">
+            <span class="hint-label">💡 釋義提示：</span>
+            <span id="hint-text">正在讀取今日題目...</span>
+        </div>
+
+        <div class="pieces-grid" id="pieces-container">
             </div>
 
-        <div class="hint-section">
-            <strong>💡 釋義提示：</strong>
-            <span id="hintText">載入中...</span>
+        <div class="input-section" id="input-container">
+            <input type="text" class="char-input" maxlength="1" data-index="0" autocomplete="off">
+            <input type="text" class="char-input" maxlength="1" data-index="1" autocomplete="off">
+            <input type="text" class="char-input" maxlength="1" data-index="2" autocomplete="off">
+            <input type="text" class="char-input" maxlength="1" data-index="3" autocomplete="off">
         </div>
 
-        <div class="input-group">
-            <input type="text" id="answerInput" maxlength="4" placeholder="請輸入四字成語">
-            <button onclick="checkAnswer()">送出</button>
+        <div class="controls">
+            <button class="btn-clear" id="btn-clear">清空重填</button>
+            <button class="btn-submit" id="btn-submit">送出解答</button>
         </div>
-
-        <div id="message" class="message"></div>
     </div>
 
-    <script src="366成語拆解謎題.js"></script>
+    <div class="modal-overlay" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modal-icon">🎉</div>
+            <h2 class="modal-title" id="modal-title">恭喜答對！</h2>
+            <p class="modal-desc" id="modal-desc">您已成功解開今日的成語謎題！</p>
+            <button class="modal-btn" id="btn-close-modal">確認</button>
+        </div>
+    </div>
 
     <script>
-        let currentIdiomData = null;
+        document.addEventListener("DOMContentLoaded", () => {
+            // 檢查資料庫是否成功載入
+            if (typeof window.getIdiomByDay !== 'function') {
+                alert("錯誤：無法讀取成語資料庫，請確認 366成語拆解謎題.js 檔案存在且未損毀。");
+                return;
+            }
 
-        // 計算今天是今年的第幾天 (1~366)
-        function getDayOfYear() {
-            const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 0);
-            const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
-            const oneDay = 1000 * 60 * 60 * 24;
-            const day = Math.floor(diff / oneDay);
-            return day;
-        }
+            // 1. 計算今天是今年的第幾天 (1~366)
+            function getDayOfYear() {
+                const now = new Date();
+                const start = new Date(now.getFullYear(), 0, 0);
+                const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+                const oneDay = 1000 * 60 * 60 * 24;
+                return Math.floor(diff / oneDay);
+            }
 
-        // 初始化遊戲
-        function initGame() {
             const today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth() + 1;
-            const date = today.getDate();
             const dayOfYear = getDayOfYear();
-
-            // 顯示日期與第幾天
-            document.getElementById('dateDisplay').textContent = 
-                `${year}年${month}月${date}日 (本年度第 ${dayOfYear} 天)`;
-
-            // 呼叫 366成語拆解謎題.js 中的 API 取得當日題目
-            if (typeof window.getIdiomByDay === 'function') {
-                currentIdiomData = window.getIdiomByDay(dayOfYear);
-                renderGame(currentIdiomData);
-            } else {
-                document.getElementById('message').innerHTML = '<span class="error">載入題庫失敗，請確認 366成語拆解謎題.js 檔案是否存在。</span>';
-            }
-        }
-
-        // 渲染畫面
-        function renderGame(data) {
-            // 填入提示
-            document.getElementById('hintText').textContent = data.hint;
-
-            // 填入 12 個零件
-            const grid = document.getElementById('partsGrid');
-            grid.innerHTML = ''; // 清空
+            const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
             
-            data.parts.forEach(part => {
-                const box = document.createElement('div');
-                box.className = 'part-box';
-                // 如果零件是空的，給予特定的樣式讓他看起來像空白預留位
-                if (part === "") {
-                    box.classList.add('empty');
+            // 更新日期顯示
+            document.getElementById('date-display').textContent = `${dateStr} (第 ${dayOfYear} 天)`;
+
+            // 2. 抓取今日題目
+            const dailyData = window.getIdiomByDay(dayOfYear);
+            const answer = dailyData.idiom;
+            const hint = dailyData.hint;
+            const example = dailyData.example;
+            const pieces = dailyData.parts; // 長度為 12 的陣列
+
+            // 3. 渲染 UI
+            document.getElementById('hint-text').textContent = hint;
+
+            const piecesContainer = document.getElementById('pieces-container');
+            piecesContainer.innerHTML = ''; // 清空
+            pieces.forEach(p => {
+                const tile = document.createElement('div');
+                tile.className = 'piece-tile';
+                if (p === "") {
+                    tile.classList.add('empty'); // 物理守恆產生的空白面
                 } else {
-                    box.textContent = part;
+                    tile.textContent = p;
                 }
-                grid.appendChild(box);
+                piecesContainer.appendChild(tile);
             });
-        }
 
-        // 檢查答案
-        function checkAnswer() {
-            const input = document.getElementById('answerInput').value.trim();
-            const msgBox = document.getElementById('message');
+            // 4. 輸入框邏輯 (自動跳轉與限制)
+            const inputs = Array.from(document.querySelectorAll('.char-input'));
+            
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    // 確保只能輸入中文字 (簡易正則表達式過濾)
+                    e.target.value = e.target.value.replace(/[^\u4e00-\u9fa5]/g, '');
+                    
+                    if (e.target.value.length === 1 && index < 3) {
+                        inputs[index + 1].focus(); // 自動跳下一格
+                    }
+                });
 
-            if (!input) {
-                msgBox.innerHTML = '<span class="error">請輸入答案！</span>';
-                return;
-            }
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                        inputs[index - 1].focus(); // 按退格鍵自動回上一格
+                    } else if (e.key === 'Enter') {
+                        checkAnswer();
+                    }
+                });
+            });
 
-            if (input.length !== 4) {
-                msgBox.innerHTML = '<span class="error">請輸入「四個字」的成語！</span>';
-                return;
-            }
+            // 聚焦第一個輸入框
+            inputs[0].focus();
 
-            if (input === currentIdiomData.idiom) {
-                msgBox.innerHTML = `<span class="success">🎉 答對了！恭喜完成今日挑戰！<br>例句：${currentIdiomData.example}</span>`;
-            } else {
-                msgBox.innerHTML = '<span class="error">❌ 答錯囉！請再仔細看看零件與提示。</span>';
-            }
-        }
+            // 5. 按鈕事件綁定
+            document.getElementById('btn-clear').addEventListener('click', () => {
+                inputs.forEach(input => input.value = '');
+                inputs[0].focus();
+            });
 
-        // 監聽 Enter 鍵直接送出
-        document.getElementById('answerInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                checkAnswer();
+            document.getElementById('btn-submit').addEventListener('click', checkAnswer);
+            document.getElementById('btn-close-modal').addEventListener('click', () => {
+                document.getElementById('result-modal').classList.remove('active');
+            });
+
+            // 6. 驗證答案邏輯
+            function checkAnswer() {
+                const userAnswer = inputs.map(input => input.value).join('');
+                const modal = document.getElementById('result-modal');
+                const modalIcon = document.getElementById('modal-icon');
+                const modalTitle = document.getElementById('modal-title');
+                const modalDesc = document.getElementById('modal-desc');
+
+                if (userAnswer.length < 4) {
+                    // 輸入不完整，加入震動提示
+                    inputs.forEach(input => {
+                        if (input.value === '') {
+                            input.classList.add('shake-animation');
+                            setTimeout(() => input.classList.remove('shake-animation'), 400);
+                        }
+                    });
+                    return;
+                }
+
+                if (userAnswer === answer) {
+                    // 答對了
+                    modalIcon.textContent = '🎉';
+                    modalTitle.textContent = '恭喜答對！';
+                    modalTitle.style.color = '#27ae60';
+                    modalDesc.innerHTML = `正確答案就是：<strong>【${answer}】</strong><br><br>例句：${example}`;
+                    modal.classList.add('active');
+                } else {
+                    // 答錯了
+                    inputs.forEach(input => {
+                        input.classList.add('shake-animation');
+                        setTimeout(() => input.classList.remove('shake-animation'), 400);
+                    });
+                    modalIcon.textContent = '🤔';
+                    modalTitle.textContent = '差一點點！';
+                    modalTitle.style.color = '#e74c3c';
+                    modalDesc.innerHTML = '您拼湊的成語不正確，請再觀察一下這些部首與零件，重新挑戰看看！';
+                    modal.classList.add('active');
+                }
             }
         });
-
-        // 網頁載入完成後啟動
-        window.onload = initGame;
     </script>
 </body>
 </html>
