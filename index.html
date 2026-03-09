@@ -2,320 +2,624 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>366日成語日曆魔方 - 終極不重複版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>成語拆字魔方</title>
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --accent-color: #e74c3c;
-            --bg-color: #f4f7f6;
-            --cube-size: 200px;
-            --face-bg: rgba(255, 255, 255, 0.95);
+            --bg-color: #0b0f19; 
+            --text-color: #e2e8f0;
+            --dice-bg: #1e293b;
+            --dice-border: #64748b;
+            --accent: #a855f7;
+            --highlight: #22d3ee;
+            --success: #34d399;
+            --danger: #f43f5e;
+            --dice-size: 100px;
         }
 
         body {
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            font-family: "Noto Serif TC", "PMingLiU", serif;
             background-color: var(--bg-color);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
+            color: var(--text-color);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; margin: 0; padding: 10px;
+            overflow-x: hidden; touch-action: pan-y; user-select: none;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
+            background-size: 550px 550px, 350px 350px, 250px 250px; 
+            background-position: 0 0, 40px 60px, 130px 270px;
         }
 
-        /* 標題與日期資訊 */
-        .header {
-            text-align: center;
-            padding: 20px;
-            background: white;
-            width: 100%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        #startScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.98); z-index: 2000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.8s;
+            backdrop-filter: blur(5px);
+        }
+        
+        .start-title {
+            font-size: 2.5rem; margin-bottom: 10px; letter-spacing: 3px;
+            background: linear-gradient(to right, var(--highlight), var(--accent));
+            -webkit-background-clip: text; color: transparent; font-weight: bold;
         }
 
-        #today-date {
-            font-size: 1.2rem;
-            color: var(--accent-color);
-            font-weight: bold;
+        .start-btn {
+            padding: 15px 50px; font-size: 1.3rem; color: #fff;
+            background: linear-gradient(45deg, var(--accent), var(--highlight));
+            border: none; border-radius: 50px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+            transition: transform 0.2s;
+        }
+        .start-btn:active { transform: scale(0.95); }
+
+        h1 { 
+            margin: 15px 0 5px 0; font-size: 1.8rem; letter-spacing: 5px;
+            background: linear-gradient(to right, var(--highlight), var(--accent));
+            -webkit-background-clip: text; color: transparent;
         }
 
-        /* 遊戲主容器 */
-        .game-container {
-            perspective: 1000px;
-            margin-top: 50px;
-            touch-action: none;
-        }
+        .date-info { font-size: 0.9rem; color: #94a3b8; margin-bottom: 10px; }
 
-        /* 3D 魔方本體 */
-        .cube {
-            width: var(--cube-size);
-            height: var(--cube-size);
-            position: relative;
-            transform-style: preserve-3d;
-            transform: rotateX(-20deg) rotateY(20deg);
-            transition: transform 0.1s;
-            cursor: grab;
+        .hint-section {
+            margin-bottom: 20px; text-align: center; min-height: 30px;
+            cursor: pointer; padding: 10px 20px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.02);
+            transition: background 0.3s;
+            max-width: 80%;
         }
+        .hint-section:hover { background: rgba(255,255,255,0.08); }
+        .hint-text { color: var(--highlight); font-size: 1rem; line-height: 1.5; }
 
-        .cube:active { cursor: grabbing; }
+        .scene-container { 
+            display: flex; gap: 50px; margin: 20px 0 50px 0; perspective: 800px; 
+        }
+        .cube-wrapper {
+            width: var(--dice-size); height: var(--dice-size);
+            position: relative; transform-style: preserve-3d;
+            transform: rotateX(-20deg) rotateY(30deg); 
+            cursor: grab; touch-action: none;
+        }
+        .cube-wrapper:active { cursor: grabbing; }
 
         .face {
-            position: absolute;
-            width: var(--cube-size);
-            height: var(--cube-size);
-            background: var(--face-bg);
-            border: 2px solid var(--primary-color);
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            box-sizing: border-box;
+            position: absolute; width: 100%; height: 100%;
+            background: var(--dice-bg); border: 2px solid var(--highlight); 
+            color: var(--highlight); border-radius: 12px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2.2rem; font-weight: bold; backface-visibility: visible;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            text-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+            user-select: none;
+        }
+        
+        .face.front  { transform: rotateY(0deg) translateZ(50px); }
+        .face.back   { transform: rotateY(180deg) translateZ(50px); }
+        .face.right  { transform: rotateY(90deg) translateZ(50px); }
+        .face.left   { transform: rotateY(-90deg) translateZ(50px); }
+        .face.top    { transform: rotateX(90deg) translateZ(50px); }
+        .face.bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+        .input-group { display: flex; gap: 12px; margin-bottom: 25px; }
+        .char-input {
+            width: 55px; height: 55px; border: 2px solid #475569;
+            background: #0f172a; color: #fff; border-radius: 10px;
+            font-size: 2rem; text-align: center; outline: none;
+            transition: all 0.2s; font-family: inherit;
+        }
+        /* 鎖定的輸入框樣式 */
+        .char-input:disabled {
+            background: #0b0f19;
+            border-color: #334155;
+            color: #475569;
+            cursor: not-allowed;
+        }
+        .char-input:focus { 
+            border-color: var(--accent); 
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+            transform: translateY(-2px);
         }
 
-        /* 骰子面上的部件樣式 */
-        .part {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #333;
-            border: 1px solid #ddd;
-            background: white;
+        .btn-check {
+            background: var(--highlight); color: #000; border: none;
+            padding: 12px 40px; font-size: 1.2rem; border-radius: 50px;
+            font-weight: bold; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
         }
+        .btn-check:active { transform: scale(0.95); }
 
-        /* 6 個面的定位 */
-        .front  { transform: translateZ(100px); }
-        .back   { transform: rotateY(180deg) translateZ(100px); }
-        .top    { transform: rotateX(90deg) translateZ(100px); }
-        .bottom { transform: rotateX(-90deg) translateZ(100px); }
-        .left   { transform: rotateY(-90deg) translateZ(100px); }
-        .right  { transform: rotateY(90deg) translateZ(100px); }
-
-        /* 提示區域 */
-        .hint-box {
-            max-width: 500px;
-            margin: 30px;
-            padding: 20px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            line-height: 1.6;
-        }
-
-        .btn-group {
-            margin-bottom: 30px;
-        }
-
-        button {
-            padding: 10px 25px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 25px;
-            background: var(--primary-color);
-            color: white;
-            cursor: pointer;
-            transition: 0.3s;
-            margin: 0 5px;
-        }
-
-        button:hover { opacity: 0.8; transform: scale(1.05); }
-
-        #answer-display {
-            margin-top: 15px;
-            font-size: 1.5rem;
-            color: #27ae60;
-            font-weight: bold;
-            display: none;
-        }
-
-        /* 音樂控制按鈕 */
-        .music-ctrl {
+        /* 放棄按鈕樣式 */
+        .btn-giveup {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: white;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 8px 15px;
+            border-radius: 20px;
             cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        .btn-giveup:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: #1e293b; padding: 30px; border-radius: 16px;
+            width: 85%; max-width: 420px; text-align: center; border: 1px solid var(--accent);
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.2);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .ans-display {
+            font-size: 2.5rem; margin: 15px 0; color: var(--highlight); 
+            letter-spacing: 8px; font-weight: bold;
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+        }
+
+        @media (max-width: 400px) {
+            :root { --dice-size: 80px; }
+            .scene-container { gap: 30px; margin: 20px 0 40px 0; }
+            .face.front  { transform: rotateY(0deg) translateZ(40px); }
+            .face.back   { transform: rotateY(180deg) translateZ(40px); }
+            .face.right  { transform: rotateY(90deg) translateZ(40px); }
+            .face.left   { transform: rotateY(-90deg) translateZ(40px); }
+            .face.top    { transform: rotateX(90deg) translateZ(40px); }
+            .face.bottom { transform: rotateX(-90deg) translateZ(40px); }
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1> 成語日曆魔方 </h1>
-    <div id="today-date">載入日期中...</div>
-</div>
-
-<div class="game-container" id="touch-area">
-    <div class="cube" id="cube">
-        <div class="face front"></div>
-        <div class="face back"></div>
-        <div class="face top"></div>
-        <div class="face bottom"></div>
-        <div class="face left"></div>
-        <div class="face right"></div>
+    <div id="startScreen">
+        <div class="start-title">成語拆字</div>
+        <p style="color:#94a3b8; margin-bottom:30px; text-align: center;">
+            🎧 建議佩戴耳機體驗音樂<br>
+            <span style="font-size:0.8rem; opacity:0.7;">(背景將生成環境音樂)</span>
+        </p>
+        <button class="start-btn" onclick="startGame()">▶ 開始挑戰</button>
     </div>
-</div>
 
-<div class="hint-box">
-    <h3>今日線索：</h3>
-    <p id="hint-text">正在從 366 題資料庫中尋找題目...</p>
-    <div id="example-text" style="color: #666; font-style: italic;"></div>
-    <div id="answer-display"></div>
-</div>
+    <h1>成語魔方</h1>
+    <div class="date-info" id="dateDisplay"></div>
+    
+    <div class="hint-section" onclick="toggleHint()">
+        <span id="hintText" class="hint-text">💡 點擊顯示釋義提示</span>
+    </div>
 
-<div class="btn-group">
-    <button onclick="toggleAnswer()">顯示答案</button>
-    <button onclick="shuffleCube()">打亂部件</button>
-</div>
+    <div class="scene-container">
+        <div class="cube-wrapper" id="cubeA">
+            <div class="face front"></div><div class="face back"></div>
+            <div class="face right"></div><div class="face left"></div>
+            <div class="face top"></div><div class="face bottom"></div>
+        </div>
+        <div class="cube-wrapper" id="cubeB">
+            <div class="face front"></div><div class="face back"></div>
+            <div class="face right"></div><div class="face left"></div>
+            <div class="face top"></div><div class="face bottom"></div>
+        </div>
+    </div>
+    
+    <div class="input-group">
+        <input type="text" class="char-input" id="in1" maxlength="1">
+        <input type="text" class="char-input" id="in2" maxlength="1" disabled>
+        <input type="text" class="char-input" id="in3" maxlength="1" disabled>
+        <input type="text" class="char-input" id="in4" maxlength="1" disabled>
+    </div>
 
-<audio id="bgm" loop>
-    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-</audio>
+    <button class="btn-check" onclick="checkAnswer()">確認拼圖</button>
 
-<div class="music-ctrl" onclick="toggleMusic()">🎵</div>
+    <button class="btn-giveup" onclick="giveUp()">🏳️ 放棄作答</button>
 
-<script>
-/** * 核心資料庫與邏輯 
- */
-const rawDB = [
-    ["一元復始","指新的一年開始，萬物更新。","新年到了，大家互相拜年。"],
-    ["大刀闊斧","形容處理事情果斷有力。","新主管果斷地推動改革。"],
-    ["三思而行","勸人做事要反覆考慮。","做決定前務必謹慎。"],
-    ["力爭上游","形容努力求取進步。","他在學業上不斷努力。"],
-    ["亡羊補牢","比喻出了問題及時修補。","雖然失敗，但現在補救還來得及。"],
-    ["井底之蛙","形容眼界狹小的人。","別做沒見識的人。"],
-    ["不遺餘力","形容用盡所有力量。","為了推廣教育，他到處奔波。"],
-    ["天馬行空","比喻才思敏捷，不拘泥。","這位作家的想像力讓人佩服。"],
-    ["手不釋卷","形容人勤奮好學。","他對歷史極感興趣。"],
-    ["未雨綢繆","比喻事先做好準備。","為了應對危機，我們提早準備。"]
-    // ... 此處簡略，程式碼下方會動態生成 366 題索引
-];
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <h2 id="mTitle" style="color:var(--success); margin:0;">🎉 挑戰成功</h2>
+            <div id="mAns" class="ans-display"></div>
+            <p id="mDesc" style="color:#cbd5e1; font-style: italic;"></p>
+            <br>
+            <button onclick="closeModal()" style="background:none; border:none; color:#94a3b8; text-decoration:underline; cursor:pointer; padding:10px;">關閉視窗</button>
+        </div>
+    </div>
 
-// 動態擴充邏輯 (確保每天都有唯一題目)
-const fullIdiomList = [];
-for(let i=0; i<366; i++) {
-    let base = rawDB[i % rawDB.length];
-    fullIdiomList.push({ w: base[0], m: base[1], e: base[2] });
-}
+    <script src="366成語拆解謎題.js" charset="UTF-8"></script>
 
-const charMap = {
-    "元": ["二", "儿"], "復": ["彳", "复"], "始": ["女", "台"],
-    "大": ["一", "人"], "闊": ["門", "活"], "斧": ["父", "斤"],
-    "三": ["一", "二"], "思": ["田", "心"], "行": ["彳", "亍"],
-    "爭": ["爫", "争"], "上": ["卜", "一"], "游": ["氵", "方", "子"],
-    "亡": ["亠", "乚"], "補": ["衤", "甫"], "牢": ["宀", "牛"],
-    "井": ["二", "廾"], "底": ["广", "氐"], "之": ["丶", "乙"], "蛙": ["虫", "圭"],
-    "遺": ["辶", "貴"], "餘": ["飠", "余"], "空": ["穴", "工"],
-    "卷": ["龹", "卩"], "雨": ["一", "冂", "氺"], "李": ["木", "子"]
-};
+    <script>
+        // --- 🎵 生成式音樂引擎 ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let musicTimer = null;
+        let beatCount = 0; 
+        let measure = 0;
 
-function decompose(idiom) {
-    let parts = idiom.split('');
-    let safety = 0;
-    while(parts.length < 12 && safety < 50) {
-        for(let i=0; i<parts.length; i++) {
-            if(charMap[parts[i]]) {
-                let sub = charMap[parts[i]];
-                if(parts.length - 1 + sub.length <= 12) {
-                    parts.splice(i, 1, ...sub);
-                    break;
+        const scale = [52, 55, 59, 60, 62, 64, 67, 71, 72, 74];
+        const progressions = [
+            [40, 47, 52, 55], // Em
+            [36, 48, 52, 55], // C
+            [43, 50, 55, 59], // G
+            [38, 50, 54, 57]  // D
+        ];
+
+        function midiToFreq(note) { return 440 * Math.pow(2, (note - 69) / 12); }
+
+        function startGenerativeMusic() {
+            if (musicTimer) clearInterval(musicTimer);
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            beatCount = 0;
+            const eightNoteTime = 300; 
+
+            musicTimer = setInterval(() => {
+                if(document.visibilityState === 'visible') {
+                    playTick(beatCount);
+                    beatCount++;
+                }
+            }, eightNoteTime);
+        }
+
+        function playTick(beat) {
+            const now = audioCtx.currentTime;
+            const barStep = beat % 16; 
+            measure = Math.floor(beat / 16); 
+
+            if (barStep % 8 === 0) {
+                const chordIndex = Math.floor(beat / 8) % 4;
+                playChord(now, progressions[chordIndex]);
+            }
+
+            if (measure >= 0) { 
+                if (barStep === 0 || barStep === 6 || barStep === 10) {
+                    const chordIndex = Math.floor(beat / 8) % 4;
+                    const rootNote = progressions[chordIndex][0];
+                    playBass(now, midiToFreq(rootNote));
+                }
+            }
+
+            if (measure >= 1) { 
+                if (Math.random() > 0.4) {
+                    const noteIndex = Math.floor(Math.random() * scale.length);
+                    const noteFreq = midiToFreq(scale[noteIndex]);
+                    const duration = Math.random() > 0.7 ? 0.4 : 0.2;
+                    playPluck(now, noteFreq, duration);
+                }
+            }
+
+            if (measure >= 2) {
+                if (barStep % 4 === 0) { 
+                    playNoise(now, 0.02); 
                 }
             }
         }
-        safety++;
-    }
-    while(parts.length < 12) parts.push("");
-    return parts.sort(() => Math.random() - 0.5);
-}
 
-// 獲取一年中的第幾天
-function getDayOfYear() {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const diff = now - start;
-    const oneDay = 1000 * 60 * 60 * 24;
-    return Math.floor(diff / oneDay);
-}
+        function playChord(time, notes) {
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(audioCtx.destination);
+            masterGain.gain.setValueAtTime(0, time);
+            masterGain.gain.linearRampToValueAtTime(0.1, time + 1.0); 
+            masterGain.gain.linearRampToValueAtTime(0, time + 2.5); 
 
-/** 遊戲狀態管理 **/
-let currentData = null;
-const dayIdx = getDayOfYear();
-
-function initGame() {
-    const data = fullIdiomList[dayIdx - 1];
-    currentData = data;
-    
-    // 顯示日期
-    const d = new Date();
-    document.getElementById('today-date').innerText = 
-        `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 (年度第 ${dayIdx} 題)`;
-    
-    document.getElementById('hint-text').innerText = data.m;
-    document.getElementById('example-text').innerText = "例句：" + data.e;
-    document.getElementById('answer-display').innerText = "答案：" + data.w;
-
-    renderCube(decompose(data.w));
-}
-
-function renderCube(parts) {
-    const faces = document.querySelectorAll('.face');
-    let partIdx = 0;
-    faces.forEach(face => {
-        face.innerHTML = '';
-        for(let i=0; i<2; i++) {
-            const p = document.createElement('div');
-            p.className = 'part';
-            p.innerText = parts[partIdx++] || "";
-            face.appendChild(p);
+            notes.forEach(note => {
+                const osc = audioCtx.createOscillator();
+                osc.type = 'triangle';
+                osc.frequency.value = midiToFreq(note);
+                osc.connect(masterGain);
+                osc.start(time);
+                osc.stop(time + 3.0);
+            });
         }
-    });
-}
 
-function toggleAnswer() {
-    const ans = document.getElementById('answer-display');
-    ans.style.display = (ans.style.display === 'block') ? 'none' : 'block';
-}
+        function playBass(time, freq) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine'; 
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.3, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.6);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(time);
+            osc.stop(time + 0.6);
+        }
 
-function shuffleCube() {
-    renderCube(decompose(currentData.w));
-}
+        function playPluck(time, freq, duration) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0, time);
+            gain.gain.linearRampToValueAtTime(0.1, time + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(time);
+            osc.stop(time + duration);
+        }
 
-/** 3D 拖曳控制 **/
-let rotX = -20, rotY = 20;
-const cube = document.getElementById('cube');
-const touchArea = document.getElementById('touch-area');
+        function playNoise(time, vol) {
+            const bufferSize = audioCtx.sampleRate * 0.1; 
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'highpass'; filter.frequency.value = 5000;
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(vol, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+            noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            noise.start(time);
+        }
 
-let isDragging = false;
-let lastX, lastY;
+        function playWinSound() {
+            [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                setTimeout(() => playPluck(audioCtx.currentTime, f, 1.0), i * 100);
+            });
+        }
+        
+        function playErrorSound() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
 
-touchArea.onmousedown = (e) => { isDragging = true; lastX = e.clientX; lastY = e.clientY; };
-window.onmouseup = () => isDragging = false;
-window.onmousemove = (e) => {
-    if(!isDragging) return;
-    let deltaX = e.clientX - lastX;
-    let deltaY = e.clientY - lastY;
-    rotY += deltaX * 0.5;
-    rotX -= deltaY * 0.5;
-    cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-    lastX = e.clientX;
-    lastY = e.clientY;
-};
+        // --- 遊戲邏輯 ---
+        let currentData = null;
+        let hintVisible = false;
 
-// 音樂控制
-function toggleMusic() {
-    const bgm = document.getElementById('bgm');
-    if (bgm.paused) bgm.play(); else bgm.pause();
-}
+        function getDayOfYear() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        }
 
-window.onload = initGame;
-</script>
+        function startGame() {
+            const startScreen = document.getElementById('startScreen');
+            startScreen.style.opacity = '0';
+            setTimeout(() => { startScreen.style.display = 'none'; }, 800);
+            
+            // 啟動音樂
+            startGenerativeMusic();
+            init();
+        }
 
+        function init() {
+            const day = getDayOfYear();
+            document.getElementById('dateDisplay').innerText = `📅 ${new Date().toLocaleDateString()} (第 ${day} 題)`;
+
+            // 確認外部 JS 已成功載入
+            if (typeof getIdiomByDay === 'undefined') {
+                alert("錯誤：找不到 '366成語拆解謎題.js'。");
+                return;
+            }
+
+            // 取得今日題目，會自動調用外部 366 天的資料庫與拆解演算法
+            currentData = getIdiomByDay(day);
+
+            hintVisible = false;
+            document.getElementById('hintText').innerText = "💡 點擊顯示釋義提示";
+
+            // 打亂部件並填充魔方
+            const seed = day * 9999; 
+            const shuffledParts = shuffle([...currentData.parts], seed);
+
+            fillCube('cubeA', shuffledParts.slice(0, 6));
+            fillCube('cubeB', shuffledParts.slice(6, 12));
+            setupRotation('cubeA');
+            setupRotation('cubeB');
+            
+            // 重置輸入框與順序邏輯
+            resetInputs();
+            setupInputs();
+        }
+
+        function resetInputs() {
+            const inputs = document.querySelectorAll('.char-input');
+            inputs.forEach((input, index) => {
+                input.value = "";
+                if (index === 0) {
+                    input.disabled = false;
+                } else {
+                    input.disabled = true;
+                }
+            });
+            inputs[0].focus();
+        }
+
+        function toggleHint() {
+            const el = document.getElementById('hintText');
+            if (!hintVisible) {
+                el.innerText = currentData.hint || "暫無釋義";
+                hintVisible = true;
+            } else {
+                el.innerText = "💡 點擊顯示釋義提示";
+                hintVisible = false;
+            }
+        }
+
+        function giveUp() {
+            if (confirm("確定要放棄挑戰並查看答案嗎？")) {
+                const title = document.getElementById('mTitle');
+                title.innerText = "💡 正確解答";
+                title.style.color = "#fbbf24"; // 黃色
+                
+                document.getElementById('mAns').innerText = currentData.idiom;
+                document.getElementById('mDesc').innerText = currentData.hint;
+                document.getElementById('modal').style.display = 'flex';
+                
+                // 填入答案並解鎖所有格子
+                const inputs = document.querySelectorAll('.char-input');
+                const answerChars = currentData.idiom.split('');
+                inputs.forEach((input, i) => {
+                    input.disabled = false;
+                    input.value = answerChars[i] || "";
+                });
+            }
+        }
+
+        function fillCube(id, chars) {
+            const faces = document.getElementById(id).querySelectorAll('.face');
+            faces.forEach((face, i) => {
+                face.innerText = chars[i] || ""; 
+            });
+        }
+
+        function shuffle(array, seed) {
+            let m = array.length, t, i;
+            const random = () => { 
+                var x = Math.sin(seed++) * 10000; 
+                return x - Math.floor(x); 
+            };
+            while (m) { 
+                i = Math.floor(random() * m--); 
+                t = array[m]; 
+                array[m] = array[i]; 
+                array[i] = t; 
+            }
+            return array;
+        }
+
+        function checkAnswer() {
+            let ans = "";
+            document.querySelectorAll('.char-input').forEach(input => ans += input.value);
+            
+            if (ans === currentData.idiom) {
+                playWinSound();
+                document.getElementById('mTitle').innerText = "🎉 挑戰成功";
+                document.getElementById('mTitle').style.color = "var(--success)";
+                document.getElementById('mAns').innerText = currentData.idiom;
+                document.getElementById('mDesc').innerText = currentData.hint;
+                document.getElementById('modal').style.display = 'flex';
+            } else {
+                playErrorSound();
+                const btn = document.querySelector('.btn-check');
+                btn.animate([
+                    { transform: 'translateX(0)' }, 
+                    { transform: 'translateX(-6px)' }, 
+                    { transform: 'translateX(6px)' }, 
+                    { transform: 'translateX(0)' }
+                ], { duration: 300 });
+            }
+        }
+
+        // --- 核心修正：完美支援注音輸入法跳格 ---
+        function setupInputs() {
+            const inputs = document.querySelectorAll('.char-input');
+            let isComposing = false;
+
+            inputs.forEach((input, index) => {
+                // 1. 偵測輸入法開始拼字
+                input.addEventListener('compositionstart', () => {
+                    isComposing = true;
+                });
+
+                // 2. 偵測輸入法拼字完成 (選定國字)
+                input.addEventListener('compositionend', (e) => {
+                    isComposing = false;
+                    setTimeout(() => {
+                        if (input.value.length > 0) {
+                            input.value = input.value.slice(-1); // 確保只留最後一個字
+                            if (index < 3) {
+                                inputs[index + 1].disabled = false;
+                                inputs[index + 1].focus();
+                            }
+                        }
+                    }, 10);
+                });
+
+                // 3. 一般輸入 (處理英數字或直接貼上)
+                input.addEventListener('input', (e) => {
+                    if (isComposing) return; // 若正在用注音拼字，不提早跳格
+                    
+                    if (input.value.length > 0) {
+                        input.value = input.value.slice(-1);
+                        if (index < 3) {
+                            inputs[index + 1].disabled = false;
+                            inputs[index + 1].focus();
+                        }
+                    }
+                });
+
+                // 4. Backspace 退回鍵優化
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === "Backspace") {
+                        if (input.value === "" && index > 0) {
+                            e.preventDefault();
+                            const prevInput = inputs[index - 1];
+                            input.disabled = true; // 將當前格子重新上鎖
+                            prevInput.focus();     // 焦點退回前一格
+                            prevInput.value = "";  // 順便幫忙清空前一格
+                        }
+                    } else if (e.key === "Enter") {
+                        checkAnswer();
+                    }
+                });
+
+                input.addEventListener('focus', () => input.select());
+            });
+        }
+
+        // --- 3D 滑動旋轉邏輯 ---
+        function setupRotation(elementId) {
+            const el = document.getElementById(elementId);
+            let isDragging = false, startX, startY;
+            let currentX = -20, currentY = 30, rotateX = -20, rotateY = 30;
+
+            const start = (e) => {
+                isDragging = true;
+                startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                el.style.transition = 'none';
+                el.style.cursor = 'grabbing';
+            };
+
+            const move = (e) => {
+                if (!isDragging) return;
+                if (e.cancelable && e.type.includes('touch')) e.preventDefault();
+                const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                rotateY = currentY + (cx - startX) * 0.5;
+                rotateX = currentX - (cy - startY) * 0.5;
+                el.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            };
+
+            const end = () => {
+                if (!isDragging) return;
+                isDragging = false; 
+                currentX = rotateX; currentY = rotateY;
+                el.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                el.style.cursor = 'grab';
+            };
+
+            el.addEventListener('mousedown', start); 
+            window.addEventListener('mousemove', move); 
+            window.addEventListener('mouseup', end);
+            
+            el.addEventListener('touchstart', start, {passive: false}); 
+            window.addEventListener('touchmove', move, {passive: false}); 
+            window.addEventListener('touchend', end);
+        }
+
+        function closeModal() { 
+            document.getElementById('modal').style.display = 'none'; 
+        }
+    </script>
 </body>
 </html>
