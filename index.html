@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>成語拆字魔方</title>
+    <title>成語拆字魔方 - 366每日挑戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap');
+
         :root {
-            --bg-color: #0b0f19; 
-            --text-color: #e2e8f0;
-            --dice-bg: #1e293b;
-            --dice-border: #64748b;
-            --accent: #a855f7;
-            --highlight: #22d3ee;
-            --success: #34d399;
-            --danger: #f43f5e;
-            --dice-size: 100px;
+            --bg-color: #0b1120; 
+            --text-color: #f8fafc;
+            --dice-bg: rgba(15, 23, 42, 0.85);
+            --dice-border: #334155;
+            --accent: #10b981;
+            --highlight: #38bdf8;
+            --dice-size: 110px;
         }
 
         body {
@@ -22,367 +23,326 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; margin: 0; padding: 10px;
+            min-height: 100vh; margin: 0; padding: 15px 10px;
             overflow-x: hidden; touch-action: pan-y; user-select: none;
-            background-image: 
-                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
-                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
-                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
-            background-size: 550px 550px, 350px 350px, 250px 250px; 
-            background-position: 0 0, 40px 60px, 130px 270px;
+            background-image: radial-gradient(circle at 50% -10%, #1e3a8a, var(--bg-color) 80%);
         }
 
-        #startScreen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 15, 25, 0.98); z-index: 2000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 0.8s;
-            backdrop-filter: blur(5px);
-        }
-        
-        .start-title {
-            font-size: 2.5rem; margin-bottom: 10px; letter-spacing: 3px;
-            background: linear-gradient(to right, var(--highlight), var(--accent));
-            -webkit-background-clip: text; color: transparent; font-weight: bold;
-        }
-
-        .start-btn {
-            padding: 15px 50px; font-size: 1.3rem; color: #fff;
-            background: linear-gradient(45deg, var(--accent), var(--highlight));
-            border: none; border-radius: 50px; cursor: pointer; font-weight: bold;
-            box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
-            transition: transform 0.2s;
-        }
-        .start-btn:active { transform: scale(0.95); }
-
-        h1 { 
-            margin: 15px 0 5px 0; font-size: 1.8rem; letter-spacing: 5px;
-            background: linear-gradient(to right, var(--highlight), var(--accent));
-            -webkit-background-clip: text; color: transparent;
-        }
-
-        .date-info { font-size: 0.9rem; color: #94a3b8; margin-bottom: 10px; }
-
-        .hint-section {
-            margin-bottom: 20px; text-align: center; min-height: 30px;
-            cursor: pointer; padding: 10px 20px; border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.02);
-            transition: background 0.3s;
-            max-width: 80%;
-        }
-        .hint-section:hover { background: rgba(255,255,255,0.08); }
-        .hint-text { color: var(--highlight); font-size: 1rem; line-height: 1.5; }
-
-        .scene-container { 
-            display: flex; gap: 50px; margin: 20px 0 50px 0; perspective: 800px; 
-        }
-        .cube-wrapper {
+        /* 3D 場景與骰子設定 */
+        .scene {
             width: var(--dice-size); height: var(--dice-size);
-            position: relative; transform-style: preserve-3d;
-            transform: rotateX(-20deg) rotateY(30deg); 
-            cursor: grab; touch-action: none;
+            perspective: 1000px; margin: 15px; display: inline-block;
         }
-        .cube-wrapper:active { cursor: grabbing; }
+
+        .cube {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-20deg) rotateY(20deg);
+            cursor: grab;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .cube:active { cursor: grabbing; }
 
         .face {
-            position: absolute; width: 100%; height: 100%;
-            background: var(--dice-bg); border: 2px solid var(--highlight); 
-            color: var(--highlight); border-radius: 12px;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 2.2rem; font-weight: bold; backface-visibility: visible;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-            text-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
-            user-select: none;
+            position: absolute; width: var(--dice-size); height: var(--dice-size);
+            background: var(--dice-bg); border: 1px solid var(--dice-border);
+            box-shadow: inset 0 0 25px rgba(56, 189, 248, 0.1), 0 8px 20px rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 46px; font-weight: 900; color: var(--highlight);
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+            border-radius: 16px; backdrop-filter: blur(8px);
         }
+
+        .front  { transform: rotateY(  0deg) translateZ(calc(var(--dice-size) / 2)); }
+        .right  { transform: rotateY( 90deg) translateZ(calc(var(--dice-size) / 2)); }
+        .back   { transform: rotateY(180deg) translateZ(calc(var(--dice-size) / 2)); }
+        .left   { transform: rotateY(-90deg) translateZ(calc(var(--dice-size) / 2)); }
+        .top    { transform: rotateX( 90deg) translateZ(calc(var(--dice-size) / 2)); }
+        .bottom { transform: rotateX(-90deg) translateZ(calc(var(--dice-size) / 2)); }
+
+        .input-box {
+            background: rgba(15, 23, 42, 0.6); border: 2px solid var(--dice-border);
+            color: white; text-align: center; font-size: 26px; letter-spacing: 6px;
+            outline: none; border-radius: 12px; padding: 10px; width: 220px;
+            transition: all 0.3s ease; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .input-box:focus { border-color: var(--highlight); box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px; padding: 25px; max-width: 550px; width: 100%;
+            text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: blur(15px);
+        }
+
+        /* 提示解鎖區塊 */
+        .hint-container {
+            position: relative; min-height: 80px; background: rgba(0,0,0,0.3);
+            border-radius: 12px; border: 1px dashed rgba(255,255,255,0.2);
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; padding: 15px;
+        }
+        .hint-container:hover { border-color: var(--highlight); background: rgba(0,0,0,0.4); }
+        .hint-overlay {
+            position: absolute; inset: 0; backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.85);
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+            font-weight: bold; color: #94a3b8; transition: opacity 0.5s ease-in-out;
+        }
+        .hint-container.unlocked .hint-overlay { opacity: 0; pointer-events: none; }
         
-        .face.front  { transform: rotateY(0deg) translateZ(50px); }
-        .face.back   { transform: rotateY(180deg) translateZ(50px); }
-        .face.right  { transform: rotateY(90deg) translateZ(50px); }
-        .face.left   { transform: rotateY(-90deg) translateZ(50px); }
-        .face.top    { transform: rotateX(90deg) translateZ(50px); }
-        .face.bottom { transform: rotateX(-90deg) translateZ(50px); }
-
-        .input-group { display: flex; gap: 12px; margin-bottom: 25px; }
-        .char-input {
-            width: 55px; height: 55px; border: 2px solid #475569;
-            background: #0f172a; color: #fff; border-radius: 10px;
-            font-size: 2rem; text-align: center; outline: none;
-            transition: all 0.2s; font-family: inherit;
+        #audio-ctrl {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(255,255,255,0.05); border-radius: 50%; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s;
         }
-        /* 鎖定的輸入框樣式 */
-        .char-input:disabled {
-            background: #0b0f19;
-            border-color: #334155;
-            color: #475569;
-            cursor: not-allowed;
-        }
-        .char-input:focus { 
-            border-color: var(--accent); 
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .btn-check {
-            background: var(--highlight); color: #000; border: none;
-            padding: 12px 40px; font-size: 1.2rem; border-radius: 50px;
-            font-weight: bold; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
-        }
-        .btn-check:active { transform: scale(0.95); }
-
-        /* 放棄按鈕樣式 */
-        .btn-giveup {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(244, 63, 94, 0.2);
-            color: var(--danger);
-            border: 1px solid var(--danger);
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            z-index: 100;
-        }
-        .btn-giveup:hover {
-            background: var(--danger);
-            color: white;
-        }
-
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 1000;
-            justify-content: center; align-items: center;
-            backdrop-filter: blur(4px);
-        }
-        .modal-content {
-            background: #1e293b; padding: 30px; border-radius: 16px;
-            width: 85%; max-width: 420px; text-align: center; border: 1px solid var(--accent);
-            box-shadow: 0 0 40px rgba(168, 85, 247, 0.2);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .ans-display {
-            font-size: 2.5rem; margin: 15px 0; color: var(--highlight); 
-            letter-spacing: 8px; font-weight: bold;
-            text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
-        }
-
-        @media (max-width: 400px) {
-            :root { --dice-size: 80px; }
-            .scene-container { gap: 30px; margin: 20px 0 40px 0; }
-            .face.front  { transform: rotateY(0deg) translateZ(40px); }
-            .face.back   { transform: rotateY(180deg) translateZ(40px); }
-            .face.right  { transform: rotateY(90deg) translateZ(40px); }
-            .face.left   { transform: rotateY(-90deg) translateZ(40px); }
-            .face.top    { transform: rotateX(90deg) translateZ(40px); }
-            .face.bottom { transform: rotateX(-90deg) translateZ(40px); }
-        }
+        #audio-ctrl:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
     </style>
 </head>
 <body>
 
-    <div id="startScreen">
-        <div class="start-title">成語拆字</div>
-        <p style="color:#94a3b8; margin-bottom:30px; text-align: center;">
-            🎧 建議佩戴耳機體驗音樂<br>
-            <span style="font-size:0.8rem; opacity:0.7;">(背景將生成環境音樂)</span>
-        </p>
-        <button class="start-btn" onclick="startGame()">▶ 開始挑戰</button>
-    </div>
+    <div id="audio-ctrl" title="開關音樂與音效">🔇</div>
 
-    <h1>成語魔方</h1>
-    <div class="date-info" id="dateDisplay"></div>
-    
-    <div class="hint-section" onclick="toggleHint()">
-        <span id="hintText" class="hint-text">💡 點擊顯示釋義提示</span>
-    </div>
-
-    <div class="scene-container">
-        <div class="cube-wrapper" id="cubeA">
-            <div class="face front"></div><div class="face back"></div>
-            <div class="face right"></div><div class="face left"></div>
-            <div class="face top"></div><div class="face bottom"></div>
-        </div>
-        <div class="cube-wrapper" id="cubeB">
-            <div class="face front"></div><div class="face back"></div>
-            <div class="face right"></div><div class="face left"></div>
-            <div class="face top"></div><div class="face bottom"></div>
-        </div>
-    </div>
-    
-    <div class="input-group">
-        <input type="text" class="char-input" id="in1" maxlength="1">
-        <input type="text" class="char-input" id="in2" maxlength="1" disabled>
-        <input type="text" class="char-input" id="in3" maxlength="1" disabled>
-        <input type="text" class="char-input" id="in4" maxlength="1" disabled>
-    </div>
-
-    <button class="btn-check" onclick="checkAnswer()">確認拼圖</button>
-
-    <button class="btn-giveup" onclick="giveUp()">🏳️ 放棄作答</button>
-
-    <div class="modal-overlay" id="modal">
-        <div class="modal-content">
-            <h2 id="mTitle" style="color:var(--success); margin:0;">🎉 挑戰成功</h2>
-            <div id="mAns" class="ans-display"></div>
-            <p id="mDesc" style="color:#cbd5e1; font-style: italic;"></p>
-            <br>
-            <button onclick="closeModal()" style="background:none; border:none; color:#94a3b8; text-decoration:underline; cursor:pointer; padding:10px;">關閉視窗</button>
+    <div class="text-center mb-4 mt-2">
+        <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-2 tracking-wide">成語拆字魔方</h1>
+        <div class="flex items-center justify-center gap-2">
+            <span id="mode-badge" class="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg shadow-blue-500/30">📅 本日挑戰</span>
+            <span id="day-text" class="text-blue-200 text-sm font-bold tracking-wider">第 -- 題</span>
         </div>
     </div>
 
-    <script src="366成語拆解謎題.js" charset="UTF-8"></script>
+    <!-- 3D 骰子區塊 -->
+    <div class="flex justify-center gap-6 mb-8 mt-4">
+        <div class="scene">
+            <div class="cube" id="cube1">
+                <div class="face front"></div><div class="face right"></div><div class="face back"></div>
+                <div class="face left"></div><div class="face top"></div><div class="face bottom"></div>
+            </div>
+        </div>
+        <div class="scene">
+            <div class="cube" id="cube2">
+                <div class="face front"></div><div class="face right"></div><div class="face back"></div>
+                <div class="face left"></div><div class="face top"></div><div class="face bottom"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲互動區塊 -->
+    <div class="glass-panel">
+        
+        <!-- 隱藏式提示區 -->
+        <div class="mb-6">
+            <p class="text-blue-300 font-bold mb-2 text-sm tracking-widest">【釋義提示】</p>
+            <div id="hint-box" class="hint-container" onclick="unlockHint()">
+                <div class="hint-overlay" id="hint-overlay">
+                    <span>🔒 點擊解鎖提示（防雷遮擋）</span>
+                </div>
+                <p id="hint-text" class="text-gray-200 text-sm md:text-base leading-relaxed opacity-0 transition-opacity duration-700">載入中...</p>
+            </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-3 mb-5">
+            <input type="text" id="answer-input" class="input-box" maxlength="4" placeholder="輸入成語" autocomplete="off">
+            <button id="submit-btn" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg hover:shadow-cyan-500/40 w-full sm:w-auto">
+                解謎驗證
+            </button>
+        </div>
+
+        <p id="message" class="text-xl font-bold min-h-[32px] mb-4"></p>
+
+        <button id="next-btn" class="text-sm text-gray-400 hover:text-white underline decoration-dashed underline-offset-4 transition-colors">
+            ⏭️ 隨機抽一題自由練習
+        </button>
+    </div>
 
     <script>
-        // --- 🎵 生成式音樂引擎 ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let musicTimer = null;
-        let beatCount = 0; 
-        let measure = 0;
+        // ==========================================
+        // 1. 進階空間音響系統 (Spatial Audio API)
+        // ==========================================
+        let audioCtx, masterGain, delayNode, feedbackGain;
+        let bgmInterval = null;
+        let soundEnabled = false;
 
-        const scale = [52, 55, 59, 60, 62, 64, 67, 71, 72, 74];
-        const progressions = [
-            [40, 47, 52, 55], // Em
-            [36, 48, 52, 55], // C
-            [43, 50, 55, 59], // G
-            [38, 50, 54, 57]  // D
-        ];
+        const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
 
-        function midiToFreq(note) { return 440 * Math.pow(2, (note - 69) / 12); }
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.7;
 
-        function startGenerativeMusic() {
-            if (musicTimer) clearInterval(musicTimer);
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            beatCount = 0;
-            const eightNoteTime = 300; 
+            delayNode = audioCtx.createDelay();
+            delayNode.delayTime.value = 0.35;
+            
+            feedbackGain = audioCtx.createGain();
+            feedbackGain.gain.value = 0.3;
 
-            musicTimer = setInterval(() => {
-                if(document.visibilityState === 'visible') {
-                    playTick(beatCount);
-                    beatCount++;
-                }
-            }, eightNoteTime);
-        }
-
-        function playTick(beat) {
-            const now = audioCtx.currentTime;
-            const barStep = beat % 16; 
-            measure = Math.floor(beat / 16); 
-
-            if (barStep % 8 === 0) {
-                const chordIndex = Math.floor(beat / 8) % 4;
-                playChord(now, progressions[chordIndex]);
-            }
-
-            if (measure >= 0) { 
-                if (barStep === 0 || barStep === 6 || barStep === 10) {
-                    const chordIndex = Math.floor(beat / 8) % 4;
-                    const rootNote = progressions[chordIndex][0];
-                    playBass(now, midiToFreq(rootNote));
-                }
-            }
-
-            if (measure >= 1) { 
-                if (Math.random() > 0.4) {
-                    const noteIndex = Math.floor(Math.random() * scale.length);
-                    const noteFreq = midiToFreq(scale[noteIndex]);
-                    const duration = Math.random() > 0.7 ? 0.4 : 0.2;
-                    playPluck(now, noteFreq, duration);
-                }
-            }
-
-            if (measure >= 2) {
-                if (barStep % 4 === 0) { 
-                    playNoise(now, 0.02); 
-                }
-            }
-        }
-
-        function playChord(time, notes) {
-            const masterGain = audioCtx.createGain();
+            delayNode.connect(feedbackGain);
+            feedbackGain.connect(delayNode);
+            
+            delayNode.connect(masterGain);
             masterGain.connect(audioCtx.destination);
-            masterGain.gain.setValueAtTime(0, time);
-            masterGain.gain.linearRampToValueAtTime(0.1, time + 1.0); 
-            masterGain.gain.linearRampToValueAtTime(0, time + 2.5); 
-
-            notes.forEach(note => {
-                const osc = audioCtx.createOscillator();
-                osc.type = 'triangle';
-                osc.frequency.value = midiToFreq(note);
-                osc.connect(masterGain);
-                osc.start(time);
-                osc.stop(time + 3.0);
-            });
         }
 
-        function playBass(time, freq) {
+        function playTone(freq, type, attack, release, vol, useDelay = true) {
+            if (!soundEnabled || !audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'sine'; 
+            
+            osc.type = type;
             osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.3, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.6);
+            
             osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(time);
-            osc.stop(time + 0.6);
+            gain.connect(masterGain);
+            if (useDelay) gain.connect(delayNode);
+
+            const now = audioCtx.currentTime;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(vol, now + attack);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + attack + release);
+
+            osc.start(now);
+            osc.stop(now + attack + release + 0.1);
         }
 
-        function playPluck(time, freq, duration) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0, time);
-            gain.gain.linearRampToValueAtTime(0.1, time + 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(time);
-            osc.stop(time + duration);
+        function playSynth(type) {
+            if (!soundEnabled || !audioCtx) return;
+            if (type === 'win') {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => playTone(freq, 'sine', 0.05, 1.5, 0.4, true), i * 100);
+                    setTimeout(() => playTone(freq, 'triangle', 0.05, 1.0, 0.2, true), i * 100);
+                });
+            } else if (type === 'wrong') {
+                playTone(120, 'sine', 0.01, 0.4, 0.6, false);
+                playTone(80, 'triangle', 0.01, 0.3, 0.4, false);
+            } else if (type === 'spin') {
+                playTone(300 + Math.random()*100, 'triangle', 0.01, 0.05, 0.1, false);
+            } else if (type === 'unlock') {
+                playTone(440.00, 'sine', 0.1, 1.2, 0.3, true);
+                playTone(659.25, 'sine', 0.1, 1.2, 0.2, true);
+            }
         }
 
-        function playNoise(time, vol) {
-            const bufferSize = audioCtx.sampleRate * 0.1; 
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'highpass'; filter.frequency.value = 5000;
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(vol, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
-            noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-            noise.start(time);
+        function startBGM() {
+            if (bgmInterval) return;
+            bgmInterval = setInterval(() => {
+                if (!soundEnabled || !audioCtx) return;
+                const freq = pentatonic[Math.floor(Math.random() * pentatonic.length)];
+                playTone(freq / 2, 'sine', 2.0, 4.0, 0.15, true); 
+            }, 2500);
         }
 
-        function playWinSound() {
-            [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
-                setTimeout(() => playPluck(audioCtx.currentTime, f, 1.0), i * 100);
-            });
+        function toggleAudio() {
+            initAudio();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            soundEnabled = !soundEnabled;
+            document.getElementById('audio-ctrl').innerText = soundEnabled ? "🔊" : "🔇";
+            document.getElementById('audio-ctrl').classList.toggle('bg-blue-500/30', soundEnabled);
+            if(soundEnabled) { startBGM(); playSynth('unlock'); } 
+            else { clearInterval(bgmInterval); bgmInterval = null; }
         }
-        
-        function playErrorSound() {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        document.getElementById('audio-ctrl').addEventListener('click', toggleAudio);
+
+
+        // ==========================================
+        // 2. 超級擴充版拆字字典 (修復 undefined 漏洞)
+        // ==========================================
+        const binaryMap = {
+            "四":["囗","儿"], "面":["丆","面下"], "面下":["囗","三"], "歌":["哥","欠"], "哥":["丁","可"], "可":["丁","口"], "楚":["林","疋"], "林":["木","木"], "疋":["乛","龰"],
+            "明":["日","月"], "家":["宀","豕"], "安":["宀","女"], "平":["干","八"], "和":["禾","口"], "禾":["丿","木"], "水":["亅","氺"], "火":["丶","火下"], "火下":["丿","乀"],
+            "山":["丨","凵"], "凵":["乚","丨"], "花":["艹","化"], "化":["亻","匕"], "似":["亻","以"], "以":["乚","人"], "一":["一","一"], "如":["女","口"], "心":["丿","心下"],
+            "日":["口","一"],"口":["冂","一"],"冂":["丨","𠃍"],"木":["十","八"],"十":["一","丨"],
+            "八":["丿","乀"],"人":["丿","乀"],"大":["一","人"],"天":["一","大"],"白":["丿","日"],
+            "百":["一","白"],"千":["丿","十"],"女":["ㄑ","乂"],"乂":["丿","乀"],"子":["了","一"],
+            "了":["乛","亅"],"氵":["丶","冫"],"冫":["丶","㇀"],"宀":["丶","冖"],"冖":["丶","乛"],
+            "艹":["十","十"],"心下":["乚","心右"],"心右":["丶","丶"],
+            "月":["冂","二"],"二":["一","一"],"田":["囗","十"],"目":["冂","三"],"三":["一","二"],
+            "彳":["丿","亻"],"亻":["丿","丨"],"辶":["丶","辶下"],"辶下":["㇋","㇏"],"阝":["㇌","丨"],
+            "广":["丶","厂"],"厂":["一","丿"],"疒":["广","冫"],"穴":["宀","八"],"土":["十","一"],
+            "士":["十","一"],"王":["一","土"],"玉":["王","丶"],"石":["厂","口"],"言":["亠","言下"],
+            "亠":["丶","一"],"言下":["二","口"],"貝":["目","八"],"車":["車上","十"],"車上":["一","日"],
+            "門":["门","丨"], /* 修復：補齊第二部件避免出現 undefined */
+            "廴":["フ","乀"],"犭":["丿","豕"],"豕":["一","豕下"],"豕下":["丿","乀"],
+            "飠":["人","良"],"良":["丶","艮"],"艮":["日","艮下"],"艮下":["𠄌","乀"],"衤":["亠","衤下"],"衤下":["丿","㇏"],
+            "礻":["丶","衤下"],"足":["口","止"],"止":["丨","止下"],"止下":["一","二"],"虫":["口","虫下"],"虫下":["丨","二"],
+            "金":["人","金下"],"金下":["王","丷"],"丷":["丶","丿"],"馬":["馬上","灬"],"馬上":["日","丨"],"灬":["丶","三"],
+            "鳥":["白","ㄅ"],"魚":["⺈","魚下"],"⺈":["丿","乛"],"魚下":["田","灬"],"雨":["一","雨下"],"雨下":["冂","氺"],"氺":["亅","八"],
+            "革":["廿","革下"],"廿":["十","十"],"革下":["口","十"],"骨":["冎","月"],"冎":["冂","冎下"],"冎下":["┌","┐"],
+            "鬼":["丿","鬼下"],"鬼下":["田","儿"],"儿":["丿","乚"],"鹿":["广","鹿下"],"鹿下":["比","鹿下下"],"比":["匕","匕"],"匕":["丿","乚"],"鹿下下":["二","儿"],
+            "麻":["广","林"],"黑":["里","灬"],"里":["田","土"]
+        };
+
+        const strokePool = ["一", "丨", "丿", "丶", "乚", "二", "十", "口", "日"];
+
+        // ==========================================
+        // 3. 升級版：公平輪替拆解演算法 + 防呆保護
+        // ==========================================
+        function decomposeTo12(idiom) {
+            let parts = idiom.split('').map((ch, idx) => ({ text: ch, origin: idx, splits: 0 }));
+            
+            function splitTarget(target) {
+                let splitResult = binaryMap[target.text];
+                let index = parts.indexOf(target);
+                
+                // 防禦性處理：若字典漏字或只有單一部件，避免產生 undefined
+                let part1 = splitResult[0] || "一";
+                let part2 = splitResult[1];
+
+                if (part2) {
+                    parts.splice(index, 1,
+                        { text: part1, origin: target.origin, splits: target.splits + 1 },
+                        { text: part2, origin: target.origin, splits: target.splits + 1 }
+                    );
+                } else {
+                    parts.splice(index, 1,
+                        { text: part1, origin: target.origin, splits: target.splits + 1 }
+                    );
+                }
+            }
+
+            for(let origin = 0; origin < 4; origin++) {
+                let target = parts.find(p => p.origin === origin && binaryMap[p.text]);
+                if (target && parts.length < 12) splitTarget(target);
+            }
+
+            let safetyLoop = 0;
+            while (parts.length < 12 && safetyLoop < 100) {
+                safetyLoop++;
+                let counts = [0, 0, 0, 0];
+                parts.forEach(p => counts[p.origin]++);
+                let splittable = parts.filter(p => binaryMap[p.text]);
+
+                if (splittable.length > 0) {
+                    splittable.sort((a, b) => {
+                        if (counts[a.origin] !== counts[b.origin]) return counts[a.origin] - counts[b.origin];
+                        return a.splits - b.splits;
+                    });
+                    splitTarget(splittable[0]);
+                } else {
+                    parts.sort((a,b) => counts[a.origin] - counts[b.origin]);
+                    let stroke = strokePool[Math.floor(Math.random() * strokePool.length)];
+                    parts.push({ text: stroke, origin: parts[0].origin, splits: 99 });
+                }
+            }
+
+            return parts.map(p => p.text).sort(() => Math.random() - 0.5); 
         }
 
-        // --- 遊戲邏輯 ---
-        let currentData = null;
-        let hintVisible = false;
+        // ==========================================
+        // 4. 內嵌 366 題專屬題庫與遊戲流程
+        // ==========================================
+        const rawIdiomsData = "一元復始:指新的一年開始。|大刀闊斧:形容做事果斷而有魄力。|三思而行:勸人做事要反覆考慮。|四面楚歌:比喻孤立無援，陷入困境。|亡羊補牢:比喻出了問題及時修補。|井底之蛙:形容見識淺薄的人。|半途而廢:做事沒恆心，中途放棄。|守株待兔:比喻妄想不勞而獲。|畫蛇添足:多此一舉，反將事弄糟。|破釜沉舟:下定決心，不顧一切幹到底。|刻舟求劍:拘泥固執，不知變通。|狐假虎威:藉著別人的權勢來欺人。|掩耳盜鈴:比喻自欺欺人。|指鹿為馬:顛倒是非，混淆黑白。|胸有成竹:做事之前已有通盤考慮。|飲水思源:不忘本，懂得感恩。|雙管齊下:同時採用兩種辦法。|熟能生巧:熟練了自然能領悟竅門。|落井下石:乘人危急時加以陷害。|畫龍點睛:關鍵處加一筆使內容生動。|鬼斧神工:技藝精巧，非人工所能及。|班門弄斧:在行家面前賣弄本事。|洗心革面:徹底悔悟，改過自新。|青出於藍:弟子勝過老師，後輩勝前輩。|臥薪嘗膽:刻苦自勵，發憤圖強。|身歷其境:親身經歷那種境地。|投筆從戎:拋棄文職，參軍報國。|志同道合:志趣與理念完全一致。|否極泰來:壞情況到頭，好運就降臨。|安居樂業:百姓生活安定，工作愉快。|同舟共濟:團結一致，共同度過難關。|一目十行:形容閱讀速度極快。|一日千里:形容進步神速或發展極快。|一鳴驚人:平時無聞，突然有驚人表現。|一塵不染:環境非常清潔，或人品純潔。|九牛一毛:極大數量中的極小部分。|大發雷霆:大發脾氣，大聲斥責。|千鈞一髮:比喻情況萬分危急。|以身作則:用實際行動做榜樣。|出神入化:技藝達到了極高境界。|百發百中:射擊技術高，每次命中。|未雨綢繆:事先做好準備防患未然。|司空見慣:經常看到，不足為奇。|目瞪口呆:受驚或不知所措的樣子。|名落孫山:考試或選拔未被錄取。|如火如荼:形容氣勢蓬勃熱烈。|字斟句酌:寫作或說話非常謹慎。|完璧歸趙:原物完整無損地歸還。|見義勇為:看到正義的事就勇敢去做。|杞人憂天:缺乏根據的無謂憂慮。|防微杜漸:在錯誤剛萌芽時就加以制止。|按圖索驥:照著線索去尋找事物。|流連忘返:沉迷於某事物而忘記歸去。|紙上談兵:空談理論，不能解決實際問題。|栩栩如生:形容模樣生動逼真。|氣象萬千:景色變化多端，非常壯觀。|旁觀者清:局外人看事情反而清楚。|袖手旁觀:置身事外，不予理會。|望梅止渴:比喻用空想來安慰自己。|雪中送炭:在別人困難時給予幫助。|捷足先登:行動快的人先達到目的。|理直氣壯:理由充分，說話氣勢壯盛。|眾志成城:大家齊心協力，力量強大。|循序漸進:按照一定的次序逐步進行。|無微不至:每一個細微處都照顧到。|朝三暮四:比喻心意不定，反覆無常。|拔苗助長:急於求成，反把事情弄糟。|滄海一粟:形容極其渺小微不足道。|滔滔不絕:說話連續不斷。|無中生有:憑空捏造事實。|對牛彈琴:對不懂理的人講道理。|精益求精:好還要更好。|語無倫次:說話毫無條理。|價值連城:形容物品十分珍貴。|樂極生悲:快樂到了極點反而轉為悲哀。|撥雲見日:比喻清除障礙，見到光明。|奮不顧身:奮勇向前，不顧生命危險。|機關算盡:費盡心思使用計謀。|頭重腳輕:形容根基不穩。|舉一反三:從一件事推知其他同類的事。|聲名狼藉:名聲非常敗壞。|一刀兩斷:堅決徹底地斷絕關係。|人山人海:形容聚集的人非常多。|三心二意:猶豫不決，意志不堅定。|五花八門:比喻花樣繁多，變化多端。|六神無主:形容心慌意亂，不知所措。|七上八下:形容心裡慌亂不安。|八面玲瓏:形容人處世圓滑，面面俱到。|九死一生:形容經歷極大危險而倖存。|十全十美:完美無缺。|百戰百勝:每戰必勝，所向無敵。|千變萬化:變化非常多。|萬事大吉:所有事情都圓滿解決。|明知故犯:明明知道不對卻故意去做。|見風轉舵:看局勢改變自己的態度。|口是心非:嘴裡說的和心裡想的不一樣。|心花怒放:形容非常高興。|手忙腳亂:做事慌張，沒有條理。|足智多謀:智謀很多。|五體投地:極其崇敬欽佩。|三頭六臂:比喻神通廣大，本領出眾。|耳目一新:看到和聽到的都感到新鮮。|口若懸河:能言善辯，說話不斷。|大驚小怪:對不足為奇的事表現驚訝。|小題大作:把小事當作大事來處理。|天衣無縫:比喻事物完美自然，沒有破綻。|水落石出:真相大白。|風平浪靜:沒有風浪，比喻平靜無事。|雷厲風行:做事果斷，行動迅速。|星羅棋布:形容數量多，分布廣泛。|日新月異:每天每月都有新的變化。|海闊天空:形容胸懷開闊或言談無邊際。|山明水秀:風景優美。|花言巧語:虛假而動聽的話。|草木皆兵:形容極度驚恐，疑神疑鬼。|一箭雙鵰:做一件事達到兩個目的。|狡兔三窟:比喻藏身的地方多。|馬到成功:形容事情順利，一開始就成功。|羊入虎口:比喻陷入危險的境地。|殺雞儆猴:懲罰一個人來警告其他人。|狗急跳牆:走投無路時不顧一切行動。|牛鬼蛇神:比喻各種壞人。|龍飛鳳舞:形容書法筆勢奔放。|雞飛狗跳:形容因為驚恐而混亂不堪。|蛛絲馬跡:比喻線索或痕跡。|鴉雀無聲:形容非常安靜。|沉魚落雁:形容女子容貌美麗。|心血來潮:突然產生的念頭。|肝膽相照:比喻真心誠意，以誠相待。|脣亡齒寒:比喻關係密切，利害相關。|毛骨悚然:形容極度害怕。|血氣方剛:形容年輕人精力旺盛。|眉飛色舞:形容非常高興得意的神態。|手舞足蹈:高興到了極點。|心如止水:形容心境平靜，毫無雜念。|面紅耳赤:形容焦急、羞愧或發怒的樣子。|目不轉睛:眼珠子一動不動地盯著看。|不恥下問:不以向身分較低的人請教為恥。|不可思議:無法想像，難以理解。|不自量力:不能正確估計自己的力量。|不約而同:沒有事先約定而行動一致。|不知所措:不知道該怎麼辦才好。|不屈不撓:在困難面前不屈服。|不速之客:沒有邀請而自己來的客人。|名不虛傳:名聲與實際相符。|自相矛盾:說話或做事前後抵觸。|半信半疑:有些相信，又有些懷疑。|不可救藥:比喻情況嚴重到無法挽救。|自言自語:自己對自己說話。|理所當然:按道理應該這樣。|莫名其妙:無法理解其中的奧妙。|無價之寶:極其珍貴的東西。|無可奈何:沒有任何辦法。|一無所有:什麼都沒有。|全心全意:投入全部的心思和精力。|一心一意:心思專一。|十萬火急:形容事情極度緊急。|一知半解:了解得不透徹。|百聞不如一見:聽別人說不如自己親眼看。|千載難逢:一千年也難遇到一次。|萬無一失:絕對不會出差錯。|千真萬確:非常真實，毫無疑問。|一落千丈:地位、景況或聲譽等急遽下降。|一毛不拔:形容非常吝嗇。|一板一眼:說話或做事有條有理。|一帆風順:比喻事情進行得非常順利。|一敗塗地:形容失敗到了極點。|一勞永逸:辛苦一次，把事情辦好。|一竅不通:什麼都不懂。|一觸即發:比喻極其危險的局勢。|一本正經:態度莊重嚴肅。|一視同仁:同樣看待，不分厚薄。|一鼓作氣:趁著士氣高昂時做事。|一語道破:一句話就把真相說穿。|一舉兩得:做一件事得到兩種好處。|二話不說:很乾脆地採取行動。|三顧茅廬:誠心誠意地邀請。|四分五裂:形容不完整或不團結。|五顏六色:形容色彩繁多。|六親不認:形容不重情義或鐵面無私。|七零八落:形容零散稀疏的樣子。|八仙過海:各自施展本領。|九霄雲外:形容非常高遠的地方。|十拿九穩:非常有把握。|百廢待舉:許多事情等著去做。|千言萬語:說不完的話。|萬水千山:形容路途遙遠險阻。|不擇手段:為了達到目的不顧一切。|不甘示弱:不願表現得比別人差。|不勞而獲:自己不勞動卻占有別人的成果。|不務正業:不從事正當的職業。|不知好歹:分不清好壞。|不解之緣:難以分開的緣分。|不遺餘力:把所有力量都用上。|心滿意足:非常滿足。|心猿意馬:心思不專一。|心直口快:性情直爽，說話不隱瞞。|心驚肉跳:形容極度恐懼。|心領神會:不用言語說明就能領會。|心安理得:自認做的事情合乎道理。|手到擒來:形容做事非常有把握。|手無寸鐵:手裡沒有任何武器。|手足無措:形容舉止慌亂，不知如何是好。|目光如豆:形容目光短淺，見識狹隘。|目中無人:驕傲自大，看不起別人。|目無全牛:技藝極其純熟。|口蜜腹劍:嘴甜心毒。|口說無憑:單憑嘴說不足為信。|耳濡目染:經常聽到看到，不知不覺受影響。|耳提面命:懇切地教導。|頭破血流:被打得很慘。|頭昏眼花:頭腦昏亂，眼睛發花。|面不改色:遇到危險時神態從容。|面目全非:事物的樣子改變得很厲害。|身敗名裂:地位喪失，名譽毀壞。|身強力壯:身體強壯，力氣大。|言行一致:說的和做的一樣。|言不由衷:說的話不是發自內心。|言簡意賅:言語簡明，意思完備。|花容月貌:形容女子容貌美麗。|草菅人命:把人命看作野草一樣輕視。|樹大招風:名聲大或地位高容易惹麻煩。|海市蜃樓:比喻虛幻的事物。|山珍海味:各種珍貴的食品。|水深火熱:形容人民生活極端痛苦。|風吹草動:比喻微小的變故。|風起雲湧:事物迅速發展，聲勢浩大。|日薄西山:比喻事物接近衰亡。|日月如梭:形容時間過得很快。|星火燎原:比喻小事發展為大勢。|天地為家:四處流浪。|天羅地網:上下四方嚴密包圍。|天真爛漫:性情純真，毫不掩飾。|天涯海角:形容極遠的地方。|步步為營:防守嚴密，行動謹慎。|自作自受:自己做錯事，自己承擔結果。|自以為是:總以為自己是對的。|自欺欺人:欺騙自己也欺騙別人。|自知之明:能正確了解自己的長處和缺點。|自鳴得意:自己表示很得意。|半斤八兩:彼此一樣，不相上下。|大公無私:秉公處理，不偏私。|大智若愚:才智很高但不露鋒芒。|大器晚成:卓越的人才往往成就較晚。|大材小用:把人才用在小事上。|小心翼翼:非常謹慎，不敢疏忽。|小鳥依人:形容女孩嬌小可愛。|老生常談:聽慣了的沒有新意的話。|老奸巨猾:閱歷深而非常狡猾。|多此一舉:做不必要的事。|少見多怪:見識少，遇到平常事也覺得奇怪。|長話短說:把長篇大論的話簡要地說出。|真知灼見:正確而透徹的見解。|假公濟私:假借公家的名義謀取私利。|虛情假意:虛假不真實的情意。|實事求是:從實際情況出發，尋求正確答案。|輕舉妄動:不經慎重考慮就輕率行動。|重見天日:脫離黑暗，重見光明。|厚此薄彼:重視這個，輕視那個。|高瞻遠矚:目光遠大。|低聲下氣:態度卑微屈從。|明察秋毫:眼光敏銳，能看清極細微的事。|暗箭傷人:在暗地裡用陰險手段傷害別人。|生龍活虎:形容活潑矯健，充滿生氣。|死裡逃生:從極危險的境地中逃脫。|同甘共苦:共同享受幸福，共同承擔艱苦。|異曲同工:不同的做法收到同樣的效果。|內憂外患:國內的變亂和外來的侵略。|外強中乾:表面強大，實際虛弱。|上行下效:上面的人怎麼做，下面的人就跟著做。|下不為例:表示下次不能再這樣做。|前車之鑑:把前人失敗的教訓當作借鑒。|後顧之憂:來自後方或未來的憂患。|左顧右盼:向左右兩邊看。|右出左入:形容變化無常。|東山再起:失敗後重新恢復地位。|西裝革履:穿著西式服裝，皮鞋。|南轅北轍:行動和目的相反。|北風呼嘯:寒風吹拂。|春暖花開:春天氣候溫暖，百花盛開。|夏日炎炎:夏天陽光強烈。|秋高氣爽:秋空高朗，氣候涼爽。|冬溫夏凊:子女孝順父母。|喜出望外:遇到出乎意料的好事而高興。|怒髮衝冠:極度憤怒。|哀鴻遍野:形容到處都是流離失所的災民。|樂不思蜀:快樂得忘記了歸去。|生機盎然:充滿生機和活力。|死灰復燃:比喻已經消失的惡勢力又重新活動。|病入膏肓:病情嚴重到無法醫治。|老當益壯:年紀雖大但志氣更加豪邁。|年少無知:年紀輕，缺乏知識經驗。|男尊女卑:封建時代輕視婦女的觀念。|女中豪傑:女性中的傑出人物。|金玉滿堂:財富極多。|木已成舟:事情已成定局，無法改變。|水到渠成:條件成熟，事情自然成功。|火上加油:比喻使人更憤怒或使事態更嚴重。|土崩瓦解:徹底崩潰。|風花雪月:指詩歌中輕淡的內容，或男女情愛。|雨過天晴:比喻情況由壞轉好。|雷霆萬鈞:形容威力極大。|電光石火:比喻事物轉瞬即逝。|山崩地裂:形容聲勢浩大或發生重大事變。|川流不息:形容來往的人或車輛非常多。|江河日下:比喻情況一天天壞下去。|海枯石爛:形容意志堅定，永遠不改變。|雲開見日:比喻黑暗過去，光明到來。|霧裡看花:形容看不清楚事物的本質。|冰天雪地:形容冰雪漫天蓋地的寒冷景象。|雪上加霜:比喻接連遭受災難。|霜風淒緊:秋風寒冷迫人。|露水夫妻:指短暫的婚姻關係。|日月光華:日月的輝煌光彩。|星羅雲布:分布很多。|辰光荏苒:時光流逝。|歲月如梭:時間過得很快。|時光荏苒:時間漸漸過去。|光陰似箭:形容時間過得極快。|年華老去:青春消逝。|青春永駐:永遠保持年輕。|白髮蒼蒼:形容極老。|黃口孺子:年幼無知的人。|青梅竹馬:形容男女小時候天真無邪的感情。|紅顏薄命:指美麗的女子命運不好。|黑白分明:比喻是非界限很清楚。|花紅柳綠:形容春天的美麗景色。|草長鶯飛:形容江南暮春的景色。|樹高千丈:比喻事物發展極大。|木人石心:意志堅定，不為誘惑所動。|葉落歸根:比喻事物總有一定的歸宿。|花開富貴:象徵吉祥富貴。|果實纍纍:結的果子很多。|瓜熟蒂落:條件成熟了，事情自然成功。|根深蒂固:基礎穩固，不容易動搖。|枝繁葉茂:枝葉繁密茂盛。|鳥語花香:形容春天的美好景象。|獸醫之手:比喻醫術高明。|魚躍龍門:比喻舉業成功或地位高升。|龍馬精神:形容健旺非凡的精神。|馬首是瞻:比喻服從指揮或跟隨別人。|羊腸小徑:形容曲折狹窄的小路。|猴年馬月:指不可知的年月。|雞鳴狗盜:比喻微不足道的本領。|犬馬之勞:表示心甘情願為別人效勞。|豬狗不如:比喻人品極其低下。|鼠目寸光:形容目光短淺。|牛高馬大:身材高大。|虎背熊腰:形容體格健壯。|兔死狐悲:因同類的死亡而感到悲傷。|龍潭虎穴:比喻極其危險的地方。|蛇蠍心腸:形容人心狠毒。|馬革裹屍:指軍人戰死沙場。|羊質虎皮:外表雄武，內心怯弱。|猴子搏矢:不自量力。|雞飛蛋打:比喻兩頭落空，一無所獲。|狗尾續貂:比喻拿不好的東西接在好東西後面。|豬突豨勇:比喻盲目冒進。|琴棋書畫:古代文人必備的四種技藝。|詩詞歌賦:文學體裁的總稱。|筆墨紙硯:文房四寶。|亭台樓閣:泛指多種供遊賞、休息的建築物。|鍋碗瓢盆:廚房用具的總稱。|柴米油鹽:泛指日常生活必需品。|酸甜苦辣:比喻各種不同的遭遇。|煎炒烹炸:各種烹調方法。|吃喝玩樂:指追求物質享受。|衣食住行:生活的四大基本需要。|春夏秋冬:一年的四個季節。|東南西北:四個方位。|上下左右:各個方面。|前後內外:各個位置。|你我他她:泛指所有人。|是非黑白:事理的對與錯。|真假虛實:事物的真實與虛假。|善惡美醜:人性的好壞與外表的妍媸。|生死存亡:關乎生命或國家的存亡。|得失成敗:獲得與失去，成功與失敗。|聚散離合:人的相聚與分離。|悲歡離合:泛指人世間的各種遭遇。|陰晴圓缺:比喻事物的盛衰變化。|起承轉合:文章寫作的結構。|宮商角徵:五聲音階。|赤橙黃綠:各種顏色。|青藍紫黑:色彩豐富。|白灰粉紅:色彩鮮明。";
+
+        const DB = [];
+        rawIdiomsData.split('|').forEach(item => {
+            let parts = item.split(':');
+            if (parts.length >= 2) DB.push([parts[0], parts[1]]);
+        });
+        while (DB.length < 366) { DB.push(DB[DB.length % DB.length]); }
+
+        let currentIdiomData = null;
 
         function getDayOfYear() {
             const now = new Date();
@@ -390,175 +350,100 @@
             return Math.floor((now - start) / (1000 * 60 * 60 * 24));
         }
 
-        function startGame() {
-            const startScreen = document.getElementById('startScreen');
-            startScreen.style.opacity = '0';
-            setTimeout(() => { startScreen.style.display = 'none'; }, 800);
-            
-            // 啟動音樂
-            startGenerativeMusic();
-            init();
+        function lockHint() {
+            const hintContainer = document.getElementById('hint-box');
+            const hintText = document.getElementById('hint-text');
+            hintContainer.classList.remove('unlocked');
+            hintText.classList.replace('opacity-100', 'opacity-0');
         }
 
-        function init() {
-            const day = getDayOfYear();
-            document.getElementById('dateDisplay').innerText = `📅 ${new Date().toLocaleDateString()} (第 ${day} 題)`;
-
-            if (typeof getIdiomByDay === 'undefined') {
-                alert("錯誤：找不到 '366成語拆解謎題.js'。");
-                return;
+        window.unlockHint = function() {
+            const hintContainer = document.getElementById('hint-box');
+            if(!hintContainer.classList.contains('unlocked')) {
+                hintContainer.classList.add('unlocked');
+                document.getElementById('hint-text').classList.replace('opacity-0', 'opacity-100');
+                playSynth('unlock');
             }
-
-            currentData = getIdiomByDay(day);
-
-            hintVisible = false;
-            document.getElementById('hintText').innerText = "💡 點擊顯示釋義提示";
-
-            const seed = day * 9999; 
-            const shuffledParts = shuffle([...currentData.parts], seed);
-
-            fillCube('cubeA', shuffledParts.slice(0, 6));
-            fillCube('cubeB', shuffledParts.slice(6, 12));
-            setupRotation('cubeA');
-            setupRotation('cubeB');
-            
-            // 重置輸入框與順序邏輯
-            resetInputs();
-            setupInputs();
         }
 
-        function resetInputs() {
-            const inputs = document.querySelectorAll('.char-input');
-            inputs.forEach((input, index) => {
-                input.value = "";
-                if (index === 0) {
-                    input.disabled = false;
-                } else {
-                    input.disabled = true;
-                }
-            });
-            inputs[0].focus();
-        }
-
-        function toggleHint() {
-            const el = document.getElementById('hintText');
-            if (!hintVisible) {
-                el.innerText = currentData.hint || "暫無釋義";
-                hintVisible = true;
+        function loadIdiom(isDaily) {
+            let index, word, hintStr;
+            if (isDaily) {
+                const day = getDayOfYear();
+                document.getElementById('mode-badge').innerText = "📅 本日挑戰";
+                document.getElementById('day-text').innerText = `第 ${day} 天`;
+                index = (day - 1) % DB.length;
             } else {
-                el.innerText = "💡 點擊顯示釋義提示";
-                hintVisible = false;
+                document.getElementById('mode-badge').innerText = "🎲 自由模式";
+                document.getElementById('day-text').innerText = "隨機練功";
+                index = Math.floor(Math.random() * DB.length);
             }
+
+            word = DB[index][0];
+            hintStr = DB[index][1].replace(new RegExp(`[${word}]`, 'g'), "〇");
+            
+            const parts = decomposeTo12(word);
+            currentIdiomData = { word, parts };
+
+            document.getElementById('hint-text').innerHTML = hintStr;
+            document.getElementById('answer-input').value = "";
+            document.getElementById('message').innerText = "";
+            document.getElementById('answer-input').focus();
+            lockHint(); 
+
+            const cube1Faces = document.querySelectorAll('#cube1 .face');
+            const cube2Faces = document.querySelectorAll('#cube2 .face');
+            for(let i=0; i<6; i++) {
+                // 核心修復：加上 || "" 防呆，若陣列無法湊齊12個，則乾淨留白不顯示 undefined
+                cube1Faces[i].innerText = parts[i] || "";
+                cube2Faces[i].innerText = parts[i+6] || "";
+            }
+
+            document.getElementById('cube1').style.transform = `rotateX(-20deg) rotateY(20deg)`;
+            document.getElementById('cube2').style.transform = `rotateX(-20deg) rotateY(-20deg)`;
         }
 
-        function giveUp() {
-            if (confirm("確定要放棄挑戰並查看答案嗎？")) {
-                const title = document.getElementById('mTitle');
-                title.innerText = "💡 正確解答";
-                title.style.color = "#fbbf24"; // 黃色
-                
-                document.getElementById('mAns').innerText = currentData.idiom;
-                document.getElementById('mDesc').innerText = currentData.hint;
-                document.getElementById('modal').style.display = 'flex';
-                
-                // 填入答案並解鎖所有格子
-                const inputs = document.querySelectorAll('.char-input');
-                const answerChars = currentData.idiom.split('');
-                inputs.forEach((input, i) => {
-                    input.disabled = false;
-                    input.value = answerChars[i] || "";
-                });
-            }
-        }
-
-        function fillCube(id, chars) {
-            const faces = document.getElementById(id).querySelectorAll('.face');
-            faces.forEach((face, i) => {
-                face.innerText = chars[i] || ""; 
-            });
-        }
-
-        function shuffle(array, seed) {
-            let m = array.length, t, i;
-            const random = () => { 
-                var x = Math.sin(seed++) * 10000; 
-                return x - Math.floor(x); 
-            };
-            while (m) { 
-                i = Math.floor(random() * m--); 
-                t = array[m]; 
-                array[m] = array[i]; 
-                array[i] = t; 
-            }
-            return array;
-        }
+        document.getElementById('submit-btn').addEventListener('click', checkAnswer);
+        document.getElementById('answer-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
 
         function checkAnswer() {
-            let ans = "";
-            document.querySelectorAll('.char-input').forEach(input => ans += input.value);
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            const input = document.getElementById('answer-input').value.trim();
+            const msgEl = document.getElementById('message');
             
-            if (ans === currentData.idiom) {
-                playWinSound();
-                document.getElementById('mTitle').innerText = "🎉 挑戰成功";
-                document.getElementById('mTitle').style.color = "var(--success)";
-                document.getElementById('mAns').innerText = currentData.idiom;
-                document.getElementById('mDesc').innerText = currentData.hint;
-                document.getElementById('modal').style.display = 'flex';
+            if (input === currentIdiomData.word) {
+                msgEl.innerText = "🎉 答對了！字神降臨！";
+                msgEl.className = "text-xl font-bold min-h-[32px] mb-4 text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]";
+                playSynth('win');
             } else {
-                playErrorSound();
-                const btn = document.querySelector('.btn-check');
-                btn.animate([
-                    { transform: 'translateX(0)' }, 
-                    { transform: 'translateX(-6px)' }, 
-                    { transform: 'translateX(6px)' }, 
-                    { transform: 'translateX(0)' }
-                ], { duration: 300 });
+                msgEl.innerText = "❌ 答錯囉，點擊提示看看？";
+                msgEl.className = "text-xl font-bold min-h-[32px] mb-4 text-rose-400 drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]";
+                playSynth('wrong');
             }
         }
 
-        function setupInputs() {
-            const inputs = document.querySelectorAll('.char-input');
-            inputs.forEach((input, index) => {
-                
-                // 1. 輸入文字後解鎖下一格
-                input.addEventListener('input', () => {
-                    if (input.value.length >= 1) {
-                        if (index < 3) {
-                            const nextInput = inputs[index + 1];
-                            nextInput.disabled = false; // 解鎖
-                            nextInput.focus();          // 跳轉
-                        }
-                    }
-                });
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            loadIdiom(false);
+        });
 
-                // 2. Backspace 回退並鎖定
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === "Backspace") {
-                        if (input.value === "" && index > 0) {
-                            const prevInput = inputs[index - 1];
-                            input.disabled = true; // 鎖定當前格
-                            prevInput.focus();     // 跳回上一格
-                        }
-                    } else if (e.key === "Enter") {
-                        checkAnswer();
-                    }
-                });
-
-                input.addEventListener('focus', () => input.select());
-            });
-        }
-
-        function setupRotation(elementId) {
-            const el = document.getElementById(elementId);
-            let isDragging = false, startX, startY;
-            let currentX = -20, currentY = 30, rotateX = -20, rotateY = 30;
+        // ==========================================
+        // 5. 3D 骰子拖曳控制
+        // ==========================================
+        function enableDrag(cubeId) {
+            const el = document.getElementById(cubeId);
+            let isDragging = false;
+            let startX, startY, currentX = -20, currentY = (cubeId === 'cube1' ? 20 : -20);
+            let rotateX = currentX, rotateY = currentY;
+            let lastPlayTime = 0;
 
             const start = (e) => {
                 isDragging = true;
                 startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                 startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                el.style.transition = 'none';
-                el.style.cursor = 'grabbing';
+                el.style.transition = 'none'; el.style.cursor = 'grabbing';
             };
 
             const move = (e) => {
@@ -566,31 +451,37 @@
                 if (e.cancelable && e.type.includes('touch')) e.preventDefault();
                 const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                 const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                rotateY = currentY + (cx - startX) * 0.5;
-                rotateX = currentX - (cy - startY) * 0.5;
+                rotateY = currentY + (cx - startX) * 0.6;
+                rotateX = currentX - (cy - startY) * 0.6;
                 el.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+
+                const now = Date.now();
+                if (now - lastPlayTime > 150) {
+                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                    playSynth('spin'); lastPlayTime = now;
+                }
             };
 
             const end = () => {
                 if (!isDragging) return;
                 isDragging = false; 
                 currentX = rotateX; currentY = rotateY;
-                el.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                el.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
                 el.style.cursor = 'grab';
             };
 
             el.addEventListener('mousedown', start); 
             window.addEventListener('mousemove', move); 
             window.addEventListener('mouseup', end);
-            
             el.addEventListener('touchstart', start, {passive: false}); 
             window.addEventListener('touchmove', move, {passive: false}); 
             window.addEventListener('touchend', end);
         }
 
-        function closeModal() { 
-            document.getElementById('modal').style.display = 'none'; 
-        }
+        enableDrag('cube1');
+        enableDrag('cube2');
+        loadIdiom(true);
+
     </script>
 </body>
 </html>
