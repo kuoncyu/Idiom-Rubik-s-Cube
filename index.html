@@ -233,6 +233,58 @@
             transition: 0.25s;
         }
         .settings-panel.hidden { opacity: 0; visibility: hidden; transform: translateY(-8px); pointer-events: none; }
+
+        /* 記錄榜／月曆彈窗 */
+        .calendar-modal {
+            position: fixed; inset: 0; z-index: 150;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center; padding: 16px;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+        .calendar-modal.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .calendar-card {
+            background: rgba(17, 24, 39, 0.97); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px; padding: 18px; max-width: 360px; width: 100%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        }
+        .calendar-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+        }
+        .calendar-header button {
+            background: rgba(255,255,255,0.08); border: none; color: #e2e8f0;
+            width: 32px; height: 32px; border-radius: 8px; font-size: 15px; cursor: pointer;
+        }
+        .calendar-header button:active { background: rgba(255,255,255,0.2); }
+        .calendar-close { background: rgba(244,63,94,0.15) !important; color: #fb7185 !important; }
+        #calendar-month-label { font-size: 17px; font-weight: 900; color: var(--highlight); }
+        .calendar-weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr); text-align: center;
+            font-size: 11px; color: #64748b; margin-bottom: 4px;
+        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .cal-day {
+            aspect-ratio: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            color: #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+            transition: 0.15s; display: flex; align-items: center; justify-content: center;
+        }
+        .cal-day:active { transform: scale(0.9); }
+        .cal-day.done {
+            background: rgba(16, 185, 129, 0.25); border-color: rgba(16, 185, 129, 0.7);
+            color: #6ee7b7; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        .cal-day.today { border-color: var(--highlight); box-shadow: 0 0 0 2px rgba(56,189,248,0.5) inset; }
+        .calendar-legend {
+            display: flex; gap: 14px; justify-content: center; margin-top: 12px;
+            font-size: 11px; color: #94a3b8;
+        }
+        .legend-dot {
+            display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px;
+            vertical-align: middle;
+        }
+        .legend-dot.done { background: rgba(16, 185, 129, 0.7); }
+        .legend-dot.today { border: 2px solid var(--highlight); }
+        .calendar-progress { text-align: center; margin-top: 10px; color: #93c5fd; font-size: 12px; font-weight: 700; }
+
     </style>
 </head>
 <body>
@@ -287,9 +339,11 @@
 
     <div class="text-center mb-4 mt-2">
         <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-2 tracking-wide">成語拆字魔方</h1>
-        <div class="flex items-center justify-center gap-2">
+        <div class="flex items-center justify-center gap-2 flex-wrap">
             <span id="mode-badge" class="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg shadow-blue-500/30">📅 本日挑戰</span>
             <span id="day-text" class="text-blue-200 text-sm font-bold tracking-wider">第 -- 題</span>
+            <span id="today-date" class="text-gray-400 text-xs">🗓 今天 --月--日</span>
+            <button id="record-btn" type="button" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs px-3 py-1 rounded-full font-bold border border-amber-400/30 transition-all">🏆 記錄榜</button>
         </div>
     </div>
 
@@ -351,6 +405,25 @@
             <button class="zy-fn-btn" onclick="clearZyBuffer()">清除注音</button>
             <button class="zy-fn-btn" onclick="backspaceAnswer()">⌫ 刪字</button>
             <button class="zy-fn-btn" onclick="closeZyKeypad()">收合鍵盤 ⌄</button>
+        </div>
+    </div>
+
+    <!-- 記錄榜／月曆彈窗 -->
+    <div id="calendar-modal" class="calendar-modal hidden">
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <button type="button" onclick="calShiftMonth(-1)">◀</button>
+                <span id="calendar-month-label">1 月</span>
+                <button type="button" onclick="calShiftMonth(1)">▶</button>
+                <button type="button" class="calendar-close" onclick="closeCalendar()">✕</button>
+            </div>
+            <div class="calendar-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+            <div class="calendar-legend">
+                <span><span class="legend-dot done"></span>已破關</span>
+                <span><span class="legend-dot today"></span>今天</span>
+            </div>
+            <p class="calendar-progress" id="calendar-progress"></p>
         </div>
     </div>
 
@@ -652,12 +725,95 @@
         renderZyGrid();
 
         let currentIdiomData = null;
+        let currentChallengeDay = null; // 目前挑戰對應的「第幾天」（自由模式為 null）
 
         function getDayOfYear() {
             const now = new Date();
             const start = new Date(now.getFullYear(), 0, 0);
             return Math.floor((now - start) / (1000 * 60 * 60 * 24));
         }
+
+        // ==========================================
+        // 4b. 記錄榜（破關進度）與月曆
+        // ==========================================
+        const CAL_YEAR = 2024; // 用閏年當作 1~366 天對應月份日期的顯示基準（與實際年份無關）
+        const PROGRESS_KEY = 'idiomProgressV1';
+
+        function loadProgress() {
+            try { return new Set(JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]')); }
+            catch (e) { return new Set(); }
+        }
+        function saveProgress() {
+            try { localStorage.setItem(PROGRESS_KEY, JSON.stringify([...completedDays])); } catch (e) {}
+        }
+        let completedDays = loadProgress();
+
+        function doyToDate(doy) {
+            const d = new Date(CAL_YEAR, 0, doy);
+            return { month: d.getMonth() + 1, date: d.getDate() };
+        }
+
+        function updateTodayBadge() {
+            const now = new Date();
+            document.getElementById('today-date').innerText = `🗓 今天 ${now.getMonth() + 1}月${now.getDate()}日`;
+        }
+
+        let calMonth = new Date().getMonth() + 1;
+
+        function renderCalendar() {
+            document.getElementById('calendar-month-label').innerText = `${calMonth} 月`;
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            const daysInMonth = new Date(CAL_YEAR, calMonth, 0).getDate();
+            const startWeekday = new Date(CAL_YEAR, calMonth - 1, 1).getDay();
+            const realNow = new Date();
+            const isRealMonth = (realNow.getMonth() + 1) === calMonth;
+
+            for (let i = 0; i < startWeekday; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const doy = Math.round((new Date(CAL_YEAR, calMonth - 1, d) - new Date(CAL_YEAR, 0, 0)) / 86400000);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cal-day';
+                btn.textContent = d;
+                if (completedDays.has(doy)) btn.classList.add('done');
+                if (isRealMonth && d === realNow.getDate()) btn.classList.add('today');
+                btn.onclick = () => jumpToDay(doy);
+                grid.appendChild(btn);
+            }
+
+            document.getElementById('calendar-progress').innerText = `已破關 ${completedDays.size} / ${DB.length} 天`;
+        }
+
+        function calShiftMonth(delta) {
+            playSynth('click');
+            calMonth += delta;
+            if (calMonth < 1) calMonth = 12;
+            if (calMonth > 12) calMonth = 1;
+            renderCalendar();
+        }
+
+        function jumpToDay(doy) {
+            playSynth('click');
+            closeCalendar();
+            loadIdiom(true, doy);
+        }
+
+        function openCalendar() {
+            playSynth('click');
+            calMonth = new Date().getMonth() + 1;
+            renderCalendar();
+            document.getElementById('calendar-modal').classList.remove('hidden');
+        }
+        function closeCalendar() {
+            playSynth('click');
+            document.getElementById('calendar-modal').classList.add('hidden');
+        }
+        document.getElementById('record-btn').addEventListener('click', openCalendar);
 
         function lockHint() {
             const hintContainer = document.getElementById('hint-box');
@@ -675,14 +831,17 @@
             }
         }
 
-        function loadIdiom(isDaily) {
+        function loadIdiom(isDaily, forceDay) {
             let index, word, hintStr;
             if (isDaily) {
-                const day = getDayOfYear();
-                document.getElementById('mode-badge').innerText = "📅 本日挑戰";
-                document.getElementById('day-text').innerText = `第 ${day} 天`;
+                const day = forceDay || getDayOfYear();
+                currentChallengeDay = day;
+                const { month, date } = doyToDate(day);
+                document.getElementById('mode-badge').innerText = forceDay ? "📅 指定挑戰" : "📅 本日挑戰";
+                document.getElementById('day-text').innerText = `第 ${day} 天（${month}月${date}日）`;
                 index = (day - 1) % DB.length;
             } else {
+                currentChallengeDay = null;
                 document.getElementById('mode-badge').innerText = "🎲 自由模式";
                 document.getElementById('day-text').innerText = "隨機練功";
                 index = Math.floor(Math.random() * DB.length);
@@ -727,6 +886,11 @@
                 msgEl.innerText = "🎉 答對了！字神降臨！";
                 msgEl.className = "text-xl font-bold min-h-[32px] mb-4 text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]";
                 playSynth('win');
+                if (currentChallengeDay) {
+                    completedDays.add(currentChallengeDay);
+                    saveProgress();
+                    if (!document.getElementById('calendar-modal').classList.contains('hidden')) renderCalendar();
+                }
             } else {
                 msgEl.innerText = "❌ 答錯囉，點擊提示看看？";
                 msgEl.className = "text-xl font-bold min-h-[32px] mb-4 text-rose-400 drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]";
@@ -791,6 +955,7 @@
 
         enableDrag('cube1');
         enableDrag('cube2');
+        updateTodayBadge();
         loadIdiom(true);
 
     </script>
