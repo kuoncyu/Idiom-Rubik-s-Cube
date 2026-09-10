@@ -15,7 +15,7 @@
             --dice-border: #334155;
             --accent: #10b981;
             --highlight: #38bdf8;
-            --dice-size: 110px;
+            --dice-size: clamp(64px, min(24vw, 22vh), 120px);
         }
 
         body {
@@ -23,15 +23,20 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; margin: 0; padding: 15px 10px;
+            min-height: 100vh; min-height: 100dvh; margin: 0; padding: 15px 10px;
             overflow-x: hidden; touch-action: pan-y; user-select: none;
             background-image: radial-gradient(circle at 50% -10%, #1e3a8a, var(--bg-color) 80%);
         }
 
-        /* 3D 場景與骰子設定 */
+        /* 全螢幕模式下，讓內容維持置中並填滿畫面 */
+        html:fullscreen body, html:-webkit-full-screen body {
+            min-height: 100vh; justify-content: center;
+        }
+
+        /* 3D 場景與骰子設定：使用 clamp() 依螢幕寬高自適應縮放 */
         .scene {
             width: var(--dice-size); height: var(--dice-size);
-            perspective: 1000px; margin: 15px; display: inline-block;
+            perspective: 1000px; margin: clamp(6px, 2vw, 15px); display: inline-block;
         }
 
         .cube {
@@ -49,7 +54,7 @@
             background: var(--dice-bg); border: 1px solid var(--dice-border);
             box-shadow: inset 0 0 25px rgba(56, 189, 248, 0.1), 0 8px 20px rgba(0,0,0,0.6);
             display: flex; align-items: center; justify-content: center;
-            font-size: 46px; font-weight: 900; color: var(--highlight);
+            font-size: calc(var(--dice-size) * 0.42); font-weight: 900; color: var(--highlight);
             text-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
             border-radius: 16px; backdrop-filter: blur(8px);
         }
@@ -69,9 +74,17 @@
         }
         .input-box:focus { border-color: var(--highlight); box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
 
+        .input-row-group { display: flex; align-items: center; gap: 8px; }
+        #zy-toggle-btn {
+            background: rgba(56, 189, 248, 0.12); border: 2px solid var(--dice-border);
+            color: var(--highlight); font-size: 20px; width: 52px; height: 52px;
+            border-radius: 12px; cursor: pointer; transition: 0.2s; flex-shrink: 0;
+        }
+        #zy-toggle-btn:hover, #zy-toggle-btn:active { background: rgba(56, 189, 248, 0.25); transform: scale(0.96); }
+
         .glass-panel {
             background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px; padding: 25px; max-width: 550px; width: 100%;
+            border-radius: 20px; padding: clamp(14px, 4vw, 25px); max-width: 550px; width: 100%;
             text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: blur(15px);
         }
 
@@ -168,7 +181,7 @@
             text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.6); backdrop-filter: blur(18px);
         }
         .start-title {
-            font-size: 32px; font-weight: 900; letter-spacing: 2px;
+            font-size: clamp(24px, 7vw, 32px); font-weight: 900; letter-spacing: 2px;
             background: linear-gradient(90deg, #22d3ee, #60a5fa);
             -webkit-background-clip: text; background-clip: text; color: transparent;
             margin-bottom: 6px;
@@ -244,10 +257,6 @@
                     <span>🔔 遊戲音效</span>
                     <label class="switch"><input type="checkbox" class="sfx-toggle" checked onchange="toggleSfx(this.checked)"><span class="slider-toggle"></span></label>
                 </div>
-                <div class="setting-row">
-                    <span>🖥️ 全螢幕遊玩</span>
-                    <label class="switch"><input type="checkbox" id="fullscreen-toggle"><span class="slider-toggle"></span></label>
-                </div>
             </div>
 
             <button id="start-btn" class="start-btn">🎮 開始遊戲</button>
@@ -315,11 +324,15 @@
         </div>
         
         <div class="flex flex-col sm:flex-row justify-center items-center gap-3 mb-5">
-            <input type="text" id="answer-input" class="input-box" maxlength="4" placeholder="輸入成語" autocomplete="off" readonly inputmode="none" onclick="openZyKeypad()">
+            <div class="input-row-group">
+                <input type="text" id="answer-input" class="input-box" maxlength="4" placeholder="輸入成語" autocomplete="off">
+                <button id="zy-toggle-btn" type="button" title="開啟注音小鍵盤" onclick="openZyKeypad()">⌨️</button>
+            </div>
             <button id="submit-btn" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg hover:shadow-cyan-500/40 w-full sm:w-auto">
                 解謎驗證
             </button>
         </div>
+        <p class="text-xs text-gray-500 -mt-3 mb-4">💡 可直接用手機／電腦的鍵盤輸入，或點擊 ⌨️ 開啟注音小鍵盤</p>
 
         <p id="message" class="text-xl font-bold min-h-[32px] mb-4"></p>
 
@@ -483,7 +496,6 @@
         }
         function updateFullscreenUI() {
             const isFs = !!document.fullscreenElement;
-            document.querySelectorAll('#fullscreen-toggle').forEach(el => el.checked = isFs);
             document.querySelectorAll('.fullscreen-btn-label').forEach(el => el.textContent = isFs ? '🖥️ 退出全螢幕' : '🖥️ 進入全螢幕');
         }
         ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(ev =>
@@ -495,7 +507,7 @@
             document.getElementById('settings-panel').classList.toggle('hidden');
         });
 
-        // ---- 初始頁面「開始遊戲」----
+        // ---- 初始頁面「開始遊戲」：自動進入全螢幕 + 依設定套用音量/音效/音樂 ----
         document.getElementById('start-btn').addEventListener('click', () => {
             initAudio();
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -503,12 +515,11 @@
             const sfxOn = document.querySelector('.start-settings .sfx-toggle').checked;
             const bgmOn = document.querySelector('.start-settings .bgm-toggle').checked;
             const vol = document.querySelector('.start-settings .volume-slider').value;
-            const fsOn = document.getElementById('fullscreen-toggle').checked;
 
             applyVolume(vol);
             toggleSfx(sfxOn);
             toggleBgm(bgmOn);
-            if (fsOn) requestFS(document.documentElement);
+            requestFS(document.documentElement); // 自動全螢幕（若裝置不支援則靜默略過）
 
             playSynth('unlock');
             const screen = document.getElementById('start-screen');
