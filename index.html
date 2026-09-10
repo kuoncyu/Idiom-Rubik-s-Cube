@@ -97,11 +97,184 @@
             cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s;
         }
         #audio-ctrl:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
+
+        /* 注音小鍵盤 */
+        .zy-keypad {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+            background: rgba(11, 17, 32, 0.97); border-top: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(12px);
+            padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)) 10px;
+            transform: translateY(0); transition: transform 0.3s ease;
+        }
+        .zy-keypad.hidden { transform: translateY(110%); pointer-events: none; }
+
+        .zy-candidates {
+            display: flex; align-items: center; gap: 8px; overflow-x: auto;
+            min-height: 44px; padding: 4px 6px; margin-bottom: 8px;
+            background: rgba(255,255,255,0.04); border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .zy-buffer {
+            color: var(--highlight); font-weight: 900; font-size: 18px;
+            letter-spacing: 2px; white-space: nowrap; padding: 0 6px;
+        }
+        .zy-cand {
+            flex: 0 0 auto; background: rgba(56, 189, 248, 0.15); color: #fff;
+            border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 8px;
+            font-size: 20px; font-weight: 700; padding: 6px 12px; cursor: pointer;
+            transition: 0.15s;
+        }
+        .zy-cand:active { background: var(--highlight); color: #0b1120; transform: scale(0.95); }
+
+        .zy-grid {
+            display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px;
+        }
+        .zy-key {
+            background: rgba(255,255,255,0.06); color: var(--text-color);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+            font-size: 17px; font-weight: 700; padding: 10px 0; cursor: pointer;
+            transition: 0.15s;
+        }
+        .zy-key:active { background: var(--highlight); color: #0b1120; transform: scale(0.93); }
+        .zy-key.zy-tone { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); }
+        .zy-key.zy-tone:active { background: var(--accent); color: #0b1120; }
+
+        .zy-toolbar {
+            display: flex; gap: 6px; margin-top: 8px;
+        }
+        .zy-fn-btn {
+            flex: 1; background: rgba(255,255,255,0.05); color: #cbd5e1;
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+            font-size: 13px; font-weight: 700; padding: 10px 4px; cursor: pointer;
+        }
+        .zy-fn-btn:active { background: rgba(255,255,255,0.15); }
+
+        .app-footer {
+            margin-top: 28px; margin-bottom: 10px; text-align: center;
+            color: #64748b; font-size: 12px; letter-spacing: 1px;
+        }
+
+        /* 初始頁面 */
+        .start-screen {
+            position: fixed; inset: 0; z-index: 200;
+            background: radial-gradient(circle at 50% 20%, #1e3a8a, var(--bg-color) 75%);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px; transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .start-screen.start-hide { opacity: 0; visibility: hidden; pointer-events: none; }
+        .start-card {
+            background: rgba(30, 41, 59, 0.55); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px; padding: 36px 28px; max-width: 420px; width: 100%;
+            text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.6); backdrop-filter: blur(18px);
+        }
+        .start-title {
+            font-size: 32px; font-weight: 900; letter-spacing: 2px;
+            background: linear-gradient(90deg, #22d3ee, #60a5fa);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            margin-bottom: 6px;
+        }
+        .start-sub { color: #93c5fd; font-size: 13px; margin-bottom: 24px; letter-spacing: 1px; }
+        .start-settings { display: flex; flex-direction: column; gap: 14px; margin-bottom: 26px; }
+        .setting-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            font-size: 14px; color: #e2e8f0;
+        }
+        .setting-row input[type="range"] { flex: 1; margin: 0 10px; accent-color: var(--highlight); }
+        .volume-label { min-width: 40px; text-align: right; color: #94a3b8; font-size: 12px; }
+
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-toggle {
+            position: absolute; cursor: pointer; inset: 0; background: rgba(255,255,255,0.15);
+            border-radius: 24px; transition: 0.3s;
+        }
+        .slider-toggle::before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background: #fff; border-radius: 50%; transition: 0.3s;
+        }
+        .switch input:checked + .slider-toggle { background: var(--highlight); }
+        .switch input:checked + .slider-toggle::before { transform: translateX(20px); }
+
+        .start-btn {
+            width: 100%; background: linear-gradient(90deg, #0891b2, #2563eb); color: #fff;
+            font-weight: 900; font-size: 18px; padding: 16px 0; border-radius: 14px; border: none;
+            cursor: pointer; letter-spacing: 3px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+            transition: 0.2s;
+        }
+        .start-btn:active { transform: scale(0.97); }
+        .start-footer { margin-top: 18px; color: #64748b; font-size: 11px; letter-spacing: 1px; }
+
+        /* 遊戲內設定面板 */
+        #settings-ctrl {
+            position: absolute; top: 15px; right: 67px;
+            background: rgba(255,255,255,0.05); border-radius: 50%; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; z-index: 60;
+        }
+        #settings-ctrl:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
+        .settings-panel {
+            position: absolute; top: 64px; right: 15px; z-index: 60; width: 250px;
+            background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; padding: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px); display: flex; flex-direction: column; gap: 14px;
+            transition: 0.25s;
+        }
+        .settings-panel.hidden { opacity: 0; visibility: hidden; transform: translateY(-8px); pointer-events: none; }
     </style>
 </head>
 <body>
 
+    <!-- 初始頁面 -->
+    <div id="start-screen" class="start-screen">
+        <div class="start-card">
+            <h1 class="start-title">成語拆字魔方</h1>
+            <p class="start-sub">366 每日挑戰・拆解真實漢字部件</p>
+
+            <div class="start-settings">
+                <div class="setting-row">
+                    <span>🔊 音量</span>
+                    <input type="range" class="volume-slider" min="0" max="100" value="70" oninput="applyVolume(this.value)">
+                    <span class="volume-label">70%</span>
+                </div>
+                <div class="setting-row">
+                    <span>🎵 背景音樂</span>
+                    <label class="switch"><input type="checkbox" class="bgm-toggle" checked onchange="toggleBgm(this.checked)"><span class="slider-toggle"></span></label>
+                </div>
+                <div class="setting-row">
+                    <span>🔔 遊戲音效</span>
+                    <label class="switch"><input type="checkbox" class="sfx-toggle" checked onchange="toggleSfx(this.checked)"><span class="slider-toggle"></span></label>
+                </div>
+                <div class="setting-row">
+                    <span>🖥️ 全螢幕遊玩</span>
+                    <label class="switch"><input type="checkbox" id="fullscreen-toggle"><span class="slider-toggle"></span></label>
+                </div>
+            </div>
+
+            <button id="start-btn" class="start-btn">🎮 開始遊戲</button>
+            <p class="start-footer">作者：郭柏宏 老師　｜　版本：20260909</p>
+        </div>
+    </div>
+
     <div id="audio-ctrl" title="開關音樂與音效">🔇</div>
+    <div id="settings-ctrl" title="遊戲設定">⚙️</div>
+    <div id="settings-panel" class="settings-panel hidden">
+        <div class="setting-row">
+            <span>🔊 音量</span>
+            <input type="range" class="volume-slider" min="0" max="100" value="70" oninput="applyVolume(this.value)">
+            <span class="volume-label">70%</span>
+        </div>
+        <div class="setting-row">
+            <span>🎵 背景音樂</span>
+            <label class="switch"><input type="checkbox" class="bgm-toggle" checked onchange="toggleBgm(this.checked)"><span class="slider-toggle"></span></label>
+        </div>
+        <div class="setting-row">
+            <span>🔔 遊戲音效</span>
+            <label class="switch"><input type="checkbox" class="sfx-toggle" checked onchange="toggleSfx(this.checked)"><span class="slider-toggle"></span></label>
+        </div>
+        <button class="zy-fn-btn" onclick="toggleFullscreen()">
+            <span class="fullscreen-btn-label">🖥️ 進入全螢幕</span>
+        </button>
+    </div>
 
     <div class="text-center mb-4 mt-2">
         <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-2 tracking-wide">成語拆字魔方</h1>
@@ -142,7 +315,7 @@
         </div>
         
         <div class="flex flex-col sm:flex-row justify-center items-center gap-3 mb-5">
-            <input type="text" id="answer-input" class="input-box" maxlength="4" placeholder="輸入成語" autocomplete="off">
+            <input type="text" id="answer-input" class="input-box" maxlength="4" placeholder="輸入成語" autocomplete="off" readonly inputmode="none" onclick="openZyKeypad()">
             <button id="submit-btn" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg hover:shadow-cyan-500/40 w-full sm:w-auto">
                 解謎驗證
             </button>
@@ -155,32 +328,55 @@
         </button>
     </div>
 
+    <!-- 內建注音輸入小鍵盤 -->
+    <div id="zy-keypad" class="zy-keypad hidden">
+        <div class="zy-candidates" id="zy-candidates">
+            <span class="zy-buffer">請輸入注音符號...</span>
+        </div>
+        <div class="zy-grid" id="zy-grid"></div>
+        <div class="zy-toolbar">
+            <button class="zy-fn-btn" onclick="clearZyBuffer()">清除注音</button>
+            <button class="zy-fn-btn" onclick="backspaceAnswer()">⌫ 刪字</button>
+            <button class="zy-fn-btn" onclick="closeZyKeypad()">收合鍵盤 ⌄</button>
+        </div>
+    </div>
+
+    <div class="app-footer">
+        作者：郭柏宏 老師　｜　版本：20260909
+    </div>
+
+
     <script>
         // ==========================================
-        // 1. 進階空間音響系統 (Spatial Audio API)
+        // 1. 音效系統：game.mp3 背景音樂 + 空間音效 (Web Audio API)
         // ==========================================
         let audioCtx, masterGain, delayNode, feedbackGain;
-        let bgmInterval = null;
-        let soundEnabled = false;
+        let soundEnabled = false;   // 遊戲音效（開鎖、答對、答錯、轉動骰子...）
+        let bgmEnabled = false;     // 背景音樂 game.mp3
+        let masterVolume = 0.7;    // 0 ~ 1
 
-        const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
+        // 背景音樂：game.mp3（請將此檔案與 index.html 放在同一目錄）
+        const bgmAudio = new Audio('game.mp3');
+        bgmAudio.loop = true;
+        bgmAudio.preload = 'auto';
+        bgmAudio.volume = masterVolume;
 
         function initAudio() {
             if (audioCtx) return;
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
+
             masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.7;
+            masterGain.gain.value = 0.7 * masterVolume;
 
             delayNode = audioCtx.createDelay();
             delayNode.delayTime.value = 0.35;
-            
+
             feedbackGain = audioCtx.createGain();
             feedbackGain.gain.value = 0.3;
 
             delayNode.connect(feedbackGain);
             feedbackGain.connect(delayNode);
-            
+
             delayNode.connect(masterGain);
             masterGain.connect(audioCtx.destination);
         }
@@ -189,10 +385,10 @@
             if (!soundEnabled || !audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
+
             osc.type = type;
             osc.frequency.value = freq;
-            
+
             osc.connect(gain);
             gain.connect(masterGain);
             if (useDelay) gain.connect(delayNode);
@@ -222,28 +418,103 @@
             } else if (type === 'unlock') {
                 playTone(440.00, 'sine', 0.1, 1.2, 0.3, true);
                 playTone(659.25, 'sine', 0.1, 1.2, 0.2, true);
+            } else if (type === 'click') {
+                playTone(600, 'square', 0.005, 0.08, 0.15, false);
+            } else if (type === 'key') {
+                playTone(900, 'sine', 0.002, 0.04, 0.12, false);
             }
         }
 
-        function startBGM() {
-            if (bgmInterval) return;
-            bgmInterval = setInterval(() => {
-                if (!soundEnabled || !audioCtx) return;
-                const freq = pentatonic[Math.floor(Math.random() * pentatonic.length)];
-                playTone(freq / 2, 'sine', 2.0, 4.0, 0.15, true); 
-            }, 2500);
+        // ---- 音量 / 音樂 / 音效 / 全螢幕 設定 ----
+        function applyVolume(v) {
+            v = parseInt(v, 10);
+            masterVolume = v / 100;
+            bgmAudio.volume = bgmEnabled ? masterVolume : 0;
+            if (masterGain) masterGain.gain.value = 0.7 * masterVolume;
+            document.querySelectorAll('.volume-slider').forEach(el => el.value = v);
+            document.querySelectorAll('.volume-label').forEach(el => el.textContent = v + '%');
+        }
+
+        function toggleBgm(on) {
+            bgmEnabled = on;
+            initAudio();
+            if (on) {
+                bgmAudio.volume = masterVolume;
+                bgmAudio.play().catch(() => {});
+            } else {
+                bgmAudio.pause();
+            }
+            document.querySelectorAll('.bgm-toggle').forEach(el => el.checked = on);
+            syncAudioIcon();
+        }
+
+        function toggleSfx(on) {
+            soundEnabled = on;
+            if (on) { initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
+            document.querySelectorAll('.sfx-toggle').forEach(el => el.checked = on);
+            syncAudioIcon();
+        }
+
+        function syncAudioIcon() {
+            const on = bgmEnabled || soundEnabled;
+            document.getElementById('audio-ctrl').innerText = on ? "🔊" : "🔇";
+            document.getElementById('audio-ctrl').classList.toggle('bg-blue-500/30', on);
         }
 
         function toggleAudio() {
-            initAudio();
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            soundEnabled = !soundEnabled;
-            document.getElementById('audio-ctrl').innerText = soundEnabled ? "🔊" : "🔇";
-            document.getElementById('audio-ctrl').classList.toggle('bg-blue-500/30', soundEnabled);
-            if(soundEnabled) { startBGM(); playSynth('unlock'); } 
-            else { clearInterval(bgmInterval); bgmInterval = null; }
+            const newState = !(bgmEnabled || soundEnabled);
+            toggleBgm(newState);
+            toggleSfx(newState);
+            if (newState) playSynth('unlock');
         }
         document.getElementById('audio-ctrl').addEventListener('click', toggleAudio);
+
+        function requestFS(el) {
+            const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+            if (fn) return fn.call(el).catch(() => {});
+        }
+        function exitFS() {
+            const fn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+            if (fn) return fn.call(document).catch(() => {});
+        }
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) requestFS(document.documentElement);
+            else exitFS();
+        }
+        function updateFullscreenUI() {
+            const isFs = !!document.fullscreenElement;
+            document.querySelectorAll('#fullscreen-toggle').forEach(el => el.checked = isFs);
+            document.querySelectorAll('.fullscreen-btn-label').forEach(el => el.textContent = isFs ? '🖥️ 退出全螢幕' : '🖥️ 進入全螢幕');
+        }
+        ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(ev =>
+            document.addEventListener(ev, updateFullscreenUI)
+        );
+
+        // ---- 遊戲內設定面板開關 ----
+        document.getElementById('settings-ctrl').addEventListener('click', () => {
+            document.getElementById('settings-panel').classList.toggle('hidden');
+        });
+
+        // ---- 初始頁面「開始遊戲」----
+        document.getElementById('start-btn').addEventListener('click', () => {
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const sfxOn = document.querySelector('.start-settings .sfx-toggle').checked;
+            const bgmOn = document.querySelector('.start-settings .bgm-toggle').checked;
+            const vol = document.querySelector('.start-settings .volume-slider').value;
+            const fsOn = document.getElementById('fullscreen-toggle').checked;
+
+            applyVolume(vol);
+            toggleSfx(sfxOn);
+            toggleBgm(bgmOn);
+            if (fsOn) requestFS(document.documentElement);
+
+            playSynth('unlock');
+            const screen = document.getElementById('start-screen');
+            screen.classList.add('start-hide');
+            setTimeout(() => { screen.style.display = 'none'; }, 520);
+        });
 
 
         // ==========================================
@@ -259,6 +530,115 @@
                 DB.push({ w: seg[0], h: seg[1], p: seg[2].split(',') });
             }
         });
+
+        // ==========================================
+        // 2b. 內建注音輸入法資料（僅涵蓋題庫會用到的字，供小鍵盤選字用）
+        // ==========================================
+        const ZY_DATA = "ㄧ=一衣依醫|ㄩㄢˊ=元源緣猿原轅|ㄈㄨˋ=復腹富賦|ㄕˇ=始矢|ㄉㄚˋ=大|ㄉㄠ=刀|ㄎㄨㄛˋ=闊|ㄈㄨˇ=斧釜|ㄙㄢ=三|ㄙ=思私司絲|ㄦˊ=而|ㄒㄧㄥˊ=行|ㄙˋ=四|ㄇㄧㄢˋ=面|ㄔㄨˇ=楚|ㄍㄜ=歌|ㄨㄤˊ=亡|ㄧㄤˊ=羊|ㄅㄨˇ=補|ㄌㄠˊ=勞牢|ㄐㄧㄥˇ=井儆|ㄉㄧˇ=底|ㄓ=之知枝|ㄨㄚ=蛙|ㄅㄢˋ=半|ㄊㄨˊ=途荼圖塗|ㄈㄟˋ=廢|ㄕㄡˇ=手守首|ㄓㄨ=豬株蛛|ㄉㄞˋ=待|ㄊㄨˋ=兔|ㄏㄨㄚˋ=畫化話|ㄕㄜˊ=蛇|ㄊㄧㄢ=天添|ㄗㄨˊ=足|ㄆㄛˋ=破|ㄔㄣˊ=沉塵辰|ㄓㄡ=舟|ㄎㄜˋ=刻客|ㄑㄧㄡˊ=求|ㄐㄧㄢˋ=見箭劍漸鑑|ㄏㄨˊ=狐|ㄐㄧㄚˇ=假|ㄏㄨˇ=虎|ㄨㄟ=微威|ㄧㄢˇ=眼掩|ㄦˇ=耳|ㄉㄠˋ=到盜道|ㄌㄧㄥˊ=鈴玲零|ㄓˇ=紙止指|ㄌㄨˋ=鹿露|ㄨㄟˋ=為未味|ㄇㄚˇ=馬|ㄒㄩㄥ=胸|ㄧㄡˇ=有|ㄔㄥˊ=成城|ㄓㄨˊ=竹|ㄧㄣˇ=飲|ㄕㄨㄟˇ=水|ㄕㄨㄤ=雙霜|ㄍㄨㄢˇ=管|ㄑㄧˊ=其棋齊|ㄒㄧㄚˋ=下夏|ㄕㄨˊ=熟|ㄋㄥˊ=能|ㄕㄥ=生聲|ㄑㄧㄠˇ=巧|ㄌㄨㄛˋ=落|ㄕˊ=石十實時|ㄌㄨㄥˊ=龍瓏|ㄉㄧㄢˇ=點|ㄐㄧㄥ=驚精睛經|ㄍㄨㄟˇ=鬼|ㄕㄣˊ=神|ㄍㄨㄥ=工公功|ㄅㄢ=班|ㄇㄣˊ=門|ㄋㄨㄥˋ=弄|ㄒㄧˇ=洗喜|ㄒㄧㄣ=心新薪|ㄍㄜˊ=革閣|ㄑㄧㄥ=青輕清|ㄔㄨ=出|ㄩˊ=魚於餘愚|ㄌㄢˊ=藍|ㄨㄛˋ=臥|ㄔㄤˊ=腸嘗常|ㄉㄢˇ=膽|ㄕㄣ=身深|ㄌㄧˋ=力歷厲例|ㄐㄧㄥˋ=境靜徑|ㄊㄡˊ=頭投|ㄅㄧˇ=筆彼|ㄘㄨㄥˊ=從|ㄖㄨㄥˊ=戎容|ㄓˋ=志智至致質|ㄊㄨㄥˊ=同|ㄏㄜˊ=河合何|ㄈㄡˇ=否|ㄐㄧˊ=極急藉吉即|ㄊㄞˋ=泰|ㄌㄞˊ=來|ㄢ=安|ㄐㄩ=居|ㄌㄜˋ=樂|ㄧㄝˋ=業葉|ㄍㄨㄥˋ=共|ㄐㄧˋ=濟驥|ㄇㄨˋ=目木暮|ㄏㄤˊ=行|ㄖˋ=日|ㄑㄧㄢ=千|ㄌㄧˇ=理裡里|ㄇㄧㄥˊ=名明鳴|ㄖㄣˊ=人仁|ㄅㄨˋ=不布步|ㄖㄢˇ=染苒|ㄐㄧㄡˇ=九|ㄋㄧㄡˊ=牛|ㄧˋ=意一益異翼義議逸|ㄇㄠˊ=毛矛茅|ㄈㄚ=發|ㄌㄟˊ=雷纍|ㄊㄧㄥˊ=霆亭|ㄐㄩㄣ=鈞|ㄈㄚˋ=髮|ㄧˇ=以已|ㄗㄨㄛˋ=作|ㄗㄜˊ=則擇|ㄖㄨˋ=入|ㄅㄞˇ=百|ㄓㄨㄥ=中衷|ㄩˇ=語雨|ㄔㄡˊ=綢|ㄇㄡˊ=繆謀|ㄎㄨㄥ=空|ㄍㄨㄢˋ=慣|ㄉㄥˋ=瞪|ㄎㄡˇ=口|ㄉㄞ=呆|ㄙㄨㄣ=孫|ㄕㄢ=山|ㄖㄨˊ=如濡孺|ㄏㄨㄛˇ=火|ㄗˋ=自字|ㄓㄣ=真斟珍|ㄐㄩˋ=句巨|ㄓㄨㄛˊ=酌灼|ㄨㄢˊ=完玩|ㄅㄧˋ=璧臂|ㄍㄨㄟ=歸|ㄓㄠˋ=趙照|ㄩㄥˇ=勇永湧|ㄑㄧˇ=起杞|ㄧㄡ=憂|ㄈㄤˊ=防|ㄉㄨˋ=杜|ㄢˋ=按暗|ㄙㄨㄛˇ=所索|ㄌㄧㄡˊ=流|ㄌㄧㄢˊ=連|ㄨㄤˋ=望忘妄|ㄈㄢˇ=返反|ㄕㄤˋ=上|ㄊㄢˊ=談潭|ㄅㄧㄥ=兵冰|ㄒㄩˇ=栩|ㄑㄧˋ=氣器|ㄒㄧㄤˋ=象|ㄨㄢˋ=萬|ㄆㄤˊ=旁|ㄍㄨㄢ=觀關冠|ㄓㄜˇ=者|ㄒㄧㄡˋ=袖秀|ㄇㄟˊ=梅眉|ㄎㄜˇ=可渴|ㄒㄩㄝˇ=雪|ㄙㄨㄥˋ=送|ㄊㄢˋ=炭|ㄐㄧㄝˊ=捷傑|ㄒㄧㄢ=先仙|ㄉㄥ=登|ㄓˊ=直值|ㄓㄨㄤˋ=壯|ㄓㄨㄥˋ=重眾|ㄒㄩㄣˊ=循|ㄒㄩˋ=序續|ㄐㄧㄣˋ=進|ㄨˊ=無|ㄓㄠ=朝招|ㄅㄚˊ=拔|ㄇㄧㄠˊ=苗|ㄓㄨˋ=助駐|ㄓㄤˇ=長|ㄘㄤ=蒼滄|ㄏㄞˇ=海|ㄙㄨˋ=粟速|ㄊㄠ=滔|ㄐㄩㄝˊ=絕|ㄉㄨㄟˋ=對|ㄉㄢˋ=彈蛋|ㄑㄧㄣˊ=琴擒|ㄌㄨㄣˊ=倫|ㄘˋ=次|ㄐㄧㄚˋ=價|ㄅㄟ=悲卑|ㄅㄛ=撥|ㄩㄣˊ=雲|ㄈㄣˋ=奮|ㄍㄨˋ=顧故固|ㄐㄧ=雞機跡|ㄙㄨㄢˋ=算|ㄐㄧㄣˇ=盡緊|ㄐㄧㄠˇ=腳狡角|ㄐㄩˇ=舉|ㄌㄤˊ=狼|ㄌㄧㄤˇ=兩|ㄉㄨㄢˋ=斷段|ㄦˋ=二|ㄨˇ=五舞|ㄏㄨㄚ=花|ㄅㄚ=八|ㄌㄧㄡˋ=六|ㄓㄨˇ=主矚|ㄑㄧ=七欺淒妻|ㄙˇ=死|ㄑㄩㄢˊ=全|ㄇㄟˇ=美|ㄓㄢˋ=戰|ㄕㄥˋ=勝|ㄅㄧㄢˋ=變遍|ㄕˋ=是事視示市似|ㄈㄢˋ=犯|ㄈㄥ=風|ㄓㄨㄢˇ=轉|ㄉㄨㄛˋ=舵|ㄈㄟ=飛非|ㄋㄨˋ=怒|ㄈㄤˋ=放|ㄇㄤˊ=忙|ㄌㄨㄢˋ=亂|ㄉㄨㄛ=多|ㄊㄧˇ=體|ㄉㄧˋ=地蒂|ㄖㄨㄛˋ=若弱|ㄒㄩㄢˊ=懸|ㄒㄧㄠˇ=小|ㄍㄨㄞˋ=怪|ㄊㄧˊ=題提|ㄈㄥˋ=縫鳳|ㄆㄧㄥˊ=平憑|ㄌㄤˋ=浪|ㄒㄧㄥ=星|ㄌㄨㄛˊ=羅|ㄩㄝˋ=月躍|ㄧㄢˊ=言顏炎鹽|ㄘㄠˇ=草|ㄐㄧㄝ=皆|ㄉㄧㄠ=鵰貂|ㄎㄨ=窟枯|ㄕㄚ=殺|ㄏㄡˊ=猴|ㄍㄡˇ=狗|ㄊㄧㄠˋ=跳|ㄑㄧㄤˊ=強牆|ㄧㄚ=鴉|ㄑㄩㄝˋ=雀確|ㄧㄢˋ=雁硯|ㄒㄩㄝˋ=血|ㄔㄠˊ=潮|ㄍㄢ=甘肝|ㄒㄧㄤ=相香|ㄔㄨㄣˊ=脣|ㄔˇ=齒恥|ㄏㄢˊ=寒|ㄍㄨˇ=骨鼓|ㄙㄨㄥˇ=悚|ㄖㄢˊ=然燃|ㄈㄤ=方|ㄍㄤ=剛|ㄙㄜˋ=色|ㄉㄠˇ=蹈|ㄏㄨㄥˊ=紅鴻|ㄔˋ=赤|ㄨㄣˋ=問|ㄌㄧㄤˋ=量|ㄩㄝ=約|ㄘㄨㄛˋ=措|ㄑㄩ=屈曲|ㄋㄠˊ=撓|ㄒㄩ=虛|ㄔㄨㄢˊ=傳|ㄉㄨㄣˋ=盾|ㄒㄧㄣˋ=信|ㄧˊ=疑一遺|ㄐㄧㄡˋ=救|ㄧㄠˋ=藥|ㄉㄤ=當|ㄇㄛˋ=莫墨|ㄇㄧㄠˋ=妙|ㄅㄠˇ=寶|ㄋㄞˋ=奈|ㄐㄧㄝˇ=解|ㄗㄞˋ=載再|ㄋㄢˊ=難南男|ㄈㄥˊ=逢|ㄕ=失屍詩|ㄓㄤˋ=丈|ㄅㄢˇ=板|ㄈㄢ=帆|ㄕㄨㄣˋ=順|ㄅㄞˋ=敗|ㄑㄧㄠˋ=竅|ㄊㄨㄥ=通|ㄔㄨˋ=觸|ㄅㄣˇ=本|ㄓㄥˋ=正|ㄉㄜˊ=得|ㄕㄨㄛ=說|ㄌㄨˊ=廬|ㄈㄣ=分|ㄌㄧㄝˋ=裂|ㄑㄧㄣ=親|ㄖㄣˋ=認|ㄍㄨㄛˋ=過|ㄒㄧㄠ=霄|ㄨㄞˋ=外|ㄋㄚˊ=拿|ㄨㄣˇ=穩|ㄏㄨㄛˋ=獲|ㄨˋ=務霧|ㄏㄠˇ=好|ㄉㄞˇ=歹|ㄇㄢˇ=滿|ㄎㄨㄞˋ=快|ㄖㄡˋ=肉|ㄌㄧㄥˇ=領|ㄏㄨㄟˋ=會|ㄘㄨㄣˋ=寸|ㄊㄧㄝˇ=鐵|ㄍㄨㄤ=光|ㄉㄡˋ=豆|ㄇㄧˋ=蜜|ㄇㄧㄥˋ=命|ㄏㄨㄣ=昏|ㄍㄞˇ=改|ㄧㄡˊ=油由|ㄐㄧㄢˇ=簡|ㄍㄞ=賅|ㄇㄠˋ=貌茂|ㄐㄧㄢ=菅奸煎|ㄕㄨˋ=樹|ㄕㄣˋ=蜃|ㄌㄡˊ=樓|ㄖㄜˋ=熱|ㄔㄨㄟ=吹|ㄉㄨㄥˋ=動|ㄅㄛˊ=薄搏|ㄒㄧ=西息豨|ㄙㄨㄛ=梭|ㄌㄧㄠˊ=燎|ㄐㄧㄚ=加家|ㄨㄤˇ=網|ㄌㄢˋ=爛|ㄇㄢˋ=漫|ㄧㄚˊ=涯|ㄧㄥˊ=營|ㄕㄡˋ=受獸|ㄐㄧㄣ=斤金|ㄨㄢˇ=晚碗|ㄘㄞˊ=材|ㄩㄥˋ=用|ㄋㄧㄠˇ=鳥|ㄌㄠˇ=老|ㄏㄨㄚˊ=華猾|ㄘˇ=此|ㄕㄠˇ=少|ㄉㄨㄢˇ=短|ㄑㄧㄥˊ=情晴|ㄏㄡˋ=厚後|ㄍㄠ=高膏|ㄓㄢ=瞻|ㄩㄢˇ=遠|ㄉㄧ=低|ㄔㄚˊ=察|ㄑㄧㄡ=秋|ㄏㄠˊ=毫豪|ㄕㄤ=傷|ㄏㄨㄛˊ=活|ㄊㄠˊ=逃|ㄎㄨˇ=苦|ㄋㄟˋ=內|ㄏㄨㄢˋ=患|ㄑㄧㄢˊ=乾前|ㄒㄧㄠˋ=效嘯|ㄔㄜ=車|ㄗㄨㄛˇ=左|ㄧㄡˋ=右|ㄆㄢˋ=盼|ㄉㄨㄥ=東冬|ㄓㄨㄤ=裝|ㄌㄩˇ=履|ㄅㄟˇ=北|ㄓㄜˊ=轍|ㄏㄨ=呼|ㄔㄨㄣ=春|ㄋㄨㄢˇ=暖|ㄎㄞ=開|ㄕㄨㄤˇ=爽|ㄨㄣ=溫|ㄑㄧㄥˋ=凊|ㄔㄨㄥ=衝|ㄞ=哀|ㄧㄝˇ=野|ㄕㄨˇ=蜀鼠|ㄤˋ=盎|ㄏㄨㄟ=灰|ㄅㄧㄥˋ=病|ㄏㄨㄤ=肓|ㄋㄧㄢˊ=年|ㄕㄠˋ=少|ㄗㄨㄣ=尊|ㄋㄩˇ=女|ㄩˋ=玉|ㄊㄤˊ=堂|ㄑㄩˊ=渠|ㄊㄨˇ=土|ㄅㄥ=崩|ㄨㄚˇ=瓦|ㄉㄧㄢˋ=電|ㄔㄨㄢ=川|ㄐㄧㄤ=江|ㄎㄢˋ=看|ㄈㄨ=夫|ㄖㄣˇ=荏|ㄙㄨㄟˋ=歲|ㄧㄣ=陰|ㄑㄩˋ=去|ㄅㄞˊ=白|ㄏㄨㄤˊ=黃|ㄗ˙=子|ㄏㄟ=黑|ㄌㄧㄡˇ=柳|ㄌㄩˋ=綠|ㄧㄥ=鶯|ㄍㄣ=根|ㄍㄨㄟˋ=貴|ㄍㄨㄛˇ=果裹|ㄍㄨㄚ=瓜|ㄈㄢˊ=繁|ㄑㄩㄢˇ=犬|ㄅㄟˋ=背|ㄒㄩㄥˊ=熊|ㄧㄠ=腰|ㄒㄩㄝˊ=穴|ㄒㄧㄝ=蠍|ㄆㄧˊ=皮|ㄉㄚˇ=打|ㄨㄟˇ=尾|ㄊㄨ=突|ㄕㄨ=書|ㄘˊ=詞|ㄊㄞˊ=台|ㄍㄨㄛ=鍋|ㄆㄧㄠˊ=瓢|ㄆㄣˊ=盆|ㄔㄞˊ=柴|ㄇㄧˇ=米|ㄙㄨㄢ=酸|ㄊㄧㄢˊ=甜|ㄌㄚˋ=辣|ㄔㄠˇ=炒|ㄆㄥ=烹|ㄓㄚˋ=炸|ㄔ=吃|ㄏㄜ=喝";
+        const ZY_MAP = {};
+        ZY_DATA.split('|').forEach(entry => {
+            const idx = entry.indexOf('=');
+            const zy = entry.slice(0, idx);
+            const chars = entry.slice(idx + 1);
+            ZY_MAP[zy] = chars.split('');
+        });
+
+        const ZY_KEYS = ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ','ㄍ','ㄎ',
+                          'ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ','ㄕ','ㄖ','ㄗ','ㄘ',
+                          'ㄙ','ㄧ','ㄨ','ㄩ','ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ',
+                          'ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ˊ','ˇ','ˋ','˙'];
+        const ZY_TONES = ['ˊ', 'ˇ', 'ˋ', '˙'];
+        let zyBuffer = "";
+
+        function renderZyGrid() {
+            const grid = document.getElementById('zy-grid');
+            grid.innerHTML = '';
+            ZY_KEYS.forEach(k => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'zy-key' + (ZY_TONES.includes(k) ? ' zy-tone' : '');
+                btn.textContent = k;
+                btn.onclick = () => onZyKey(k);
+                grid.appendChild(btn);
+            });
+        }
+
+        function onZyKey(k) {
+            playSynth('key');
+            if (ZY_TONES.includes(k)) {
+                // 聲調符號一律置於最後，且同一組只保留一個
+                zyBuffer = zyBuffer.replace(/[ˊˇˋ˙]$/, '') + k;
+            } else {
+                // 若前面已經有聲調符號，代表要開始輸入下一個字了，重新開始
+                if (/[ˊˇˋ˙]$/.test(zyBuffer)) zyBuffer = '';
+                zyBuffer += k;
+            }
+            updateZyCandidates();
+        }
+
+        function updateZyCandidates() {
+            const box = document.getElementById('zy-candidates');
+            box.innerHTML = '';
+            const bufSpan = document.createElement('span');
+            bufSpan.className = 'zy-buffer';
+            bufSpan.textContent = zyBuffer || '請輸入注音符號...';
+            box.appendChild(bufSpan);
+            const cands = ZY_MAP[zyBuffer];
+            if (cands) {
+                cands.forEach(ch => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'zy-cand';
+                    b.textContent = ch;
+                    b.onclick = () => selectZyCandidate(ch);
+                    box.appendChild(b);
+                });
+            }
+        }
+
+        function selectZyCandidate(ch) {
+            playSynth('click');
+            const input = document.getElementById('answer-input');
+            if (input.value.length < 4) {
+                input.value += ch;
+            }
+            zyBuffer = "";
+            updateZyCandidates();
+            if (input.value.length >= 4) {
+                closeZyKeypad();
+            }
+        }
+
+        function clearZyBuffer() {
+            playSynth('key');
+            zyBuffer = "";
+            updateZyCandidates();
+        }
+
+        function backspaceAnswer() {
+            playSynth('key');
+            if (zyBuffer) {
+                zyBuffer = zyBuffer.slice(0, -1);
+                updateZyCandidates();
+                return;
+            }
+            const input = document.getElementById('answer-input');
+            input.value = input.value.slice(0, -1);
+        }
+
+        function openZyKeypad() {
+            playSynth('click');
+            document.getElementById('zy-keypad').classList.remove('hidden');
+            zyBuffer = "";
+            updateZyCandidates();
+        }
+
+        function closeZyKeypad() {
+            playSynth('click');
+            document.getElementById('zy-keypad').classList.add('hidden');
+        }
+
+        renderZyGrid();
 
         let currentIdiomData = null;
 
@@ -345,6 +725,7 @@
 
         document.getElementById('next-btn').addEventListener('click', () => {
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            playSynth('click');
             loadIdiom(false);
         });
 
